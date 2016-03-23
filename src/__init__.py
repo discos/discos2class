@@ -36,8 +36,6 @@ def cmd_line():
                         help="output directory name")
     parser.add_argument('source_dir', nargs='+',
                         help='directory path(s) to scans')
-    parser.add_argument('-f', action='store_true', dest='force',
-                        help='force override of existing files')
     parser.add_argument('--version', action='store_true', dest='show_version',
                         help='print version information and exit')
 
@@ -65,7 +63,6 @@ def cmd_line():
             os.makedirs(ns.output_dir)
         except Exception, e:
             logging.warning("cannot create directory: %s" % (ns.output_dir,))
-            logging.warning(e.message)
     for input_scan_directory in ns.source_dir:
         try:
             converter = DiscosScanConverter(input_scan_directory)

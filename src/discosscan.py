@@ -19,6 +19,7 @@
 import os
 import logging
 from datetime import datetime
+import sys
 
 import numpy as np 
 
@@ -54,8 +55,8 @@ class DiscosScanConverter(object):
         try:
             os.makedirs(dest_subdir)
         except Exception, e:
-            logging.warning("cannot create directory: %s" % (dest_subdir,))
-            logging.warning(e.message)
+            logging.error("output directory exists: %s" % (dest_subdir,))
+            sys.exit(1)
         subscan_files = [os.path.join(self.scan_path, f) 
                          for f in os.listdir(self.scan_path)
                          if not f == SUMMARY and
