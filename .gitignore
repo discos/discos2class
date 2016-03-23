@@ -3,4 +3,9 @@ data
 *swp
 astropy_open_fits.py
 create_new_gildas_file.py
+open_discos_observation.py
+output_data
+build
+*.pdf
+*.ps
 *~
