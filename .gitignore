@@ -1,0 +1,6 @@
+*.fits
+data
+*swp
+astropy_open_fits.py
+create_new_gildas_file.py
+*~

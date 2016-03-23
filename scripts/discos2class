@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+
+import discos2class
+discos2class.cmd_line()
