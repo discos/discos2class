@@ -96,6 +96,7 @@ class DiscosScanConverter(object):
                 dest_file_name = FILE_PREFIX + \
                                  "_FEED%d" % (rf_input["feed"],) +\
                                  "_IF%d" % (rf_input["ifChain"],) +\
+                                 "_SEC%d" % (section["id"],) +\
                                  "_%s" % (rf_input["polarization"],) +\
                                  ".nmb"
                 dest_file_path = os.path.join(dest_dir, dest_file_name)
@@ -182,7 +183,7 @@ class DiscosScanConverter(object):
             obs.head.spe.fres = bandwidth / float(nchan)
             obs.head.spe.foff = offsetFrequencyAt0
             obs.head.spe.vres = -1. # FIXME: da calcolare come fits '11cd2r'
-            obs.head.spe.voff = 0. #FIXME: ricavare da vlsr (fits '1vsou2r')
+            obs.head.spe.voff = self.summary["velocity"]["vrad"]
             obs.head.spe.bad = 0.
             obs.head.spe.image = 0.
             #nel fits abbiamo la frequenfa topocentrica calcolata
