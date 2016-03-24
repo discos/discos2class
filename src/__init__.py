@@ -67,6 +67,7 @@ def cmd_line():
         try:
             converter = DiscosScanConverter(input_scan_directory)
             converter.load_summary_info()
+            converter.load_subscans()
             converter.convert_subscans(ns.output_dir)
         except Exception, e:
             if ns.debug:

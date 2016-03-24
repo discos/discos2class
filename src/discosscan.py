@@ -34,6 +34,7 @@ SUMMARY = "summary.fits"
 STOKES = "stokes"
 CLIGHT = 299793e3
 FILE_PREFIX = "class"
+DATA_EXTENSION = ".fits"
 
 class DiscosScanException(Exception):
     def __init__(self, message):
@@ -45,6 +46,23 @@ class DiscosScanConverter(object):
         self.scan_path = path
         self.got_summary = False
         self.file_class_out = pyclassfiller.ClassFileOut()
+        self.subscans = []
+
+    def load_subscans(self):
+        for subscan_file in os.listdir(self.scan_path):
+            ext = os.path.splitext(subscan_file)[-1]
+            if not subscan_file == SUMMARY and ext == DATA_EXTENSION:
+                subscan_path = os.path.join(self.scan_path, subscan_file)
+                with fits.open(subscan_path) as subscan:
+                    self.subscans.append((subscan_path, 
+                                          subscan[0].header["SIGNAL"],
+                                          Time(subscan["DATA TABLE"].data["time"][0],
+                                               format = "mjd",
+                                               scale = "utc")
+                                         ))
+        self.subscans.sort(key=lambda(x):x[2])
+        logging.debug("ordered files: %s" % (str([filename for filename,_,_ in
+                                                  self.subscans]),))
 
     def convert_subscans(self, dest_dir=None):
         if not dest_dir:
@@ -57,13 +75,7 @@ class DiscosScanConverter(object):
         except Exception, e:
             logging.error("output directory exists: %s" % (dest_subdir,))
             sys.exit(1)
-        subscan_files = [os.path.join(self.scan_path, f) 
-                         for f in os.listdir(self.scan_path)
-                         if not f == SUMMARY and
-                         f.endswith(".fits")]
-        #sort by creation date
-        sorted(subscan_files, key=lambda(x):os.stat(x).st_ctime)
-        for subscan_file in subscan_files:
+        for subscan_file, signal, subscan_time in self.subscans:
             logging.debug("convert subscan file: %s" % (subscan_file,))
             self.convert_subscan(subscan_file, dest_subdir)
 
