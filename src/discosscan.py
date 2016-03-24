@@ -41,7 +41,6 @@ class DiscosScanException(Exception):
         super(DiscosScanException, self).__init__(message)
 
 class DiscosScanConverter(object):
-
     def __init__(self, path=None):
         self.scan_path = path
         self.got_summary = False
@@ -81,53 +80,56 @@ class DiscosScanConverter(object):
 
     def convert_subscan(self, subscan_file, dest_dir):
         with fits.open(subscan_file) as subscan:
-            for section in subscan["SECTION TABLE"].data:
-                logging.debug("loading section: %s" % (str(section["id"]),))
-                if section["type"] == "stokes":
-                    npols = 4
-                else:
-                    npols = 1
-                for pol in range(npols):
-                    dest_file_name = FILE_PREFIX + \
-                                     "_sec" + str(section["id"]) + \
-                                     "_pol" + str(pol) + \
-                                     ".nmb"
-                    dest_file_path = os.path.join(dest_dir, dest_file_name)
-                    logging.debug("open output file: %s" % (dest_file_name,))
-                    try:
-                        self.file_class_out.open(dest_file_path, 
-                                                 new = False,
-                                                 over = False,
-                                                 size = 999999,
-                                                 single = True)
-                        logging.debug("opened successfully in append mode")
-                    except:
-                        self.file_class_out.open(dest_file_path, 
-                                                 new = True,
-                                                 over = False,
-                                                 size = 999999,
-                                                 single = True)
-                        logging.debug("opened successfully in create mode")
-                    self.write_observations(section["id"], pol, subscan)
-                    self.file_class_out.close()
+            rf_inputs = subscan["RF INPUTS"].data
+            sections = subscan["SECTION TABLE"].data
+            for rf_index, rf_input in enumerate(rf_inputs):
+                #search for section
+                found_section = False
+                section = None
+                for s in sections:
+                    if rf_input["section"] == s["id"]:
+                        found_section = True
+                        section = s
+                if not found_section:
+                    raise DiscosScanException("cannot find section %d" %\
+                                              (rf_input["section"],))
+                dest_file_name = FILE_PREFIX + \
+                                 "_FEED%d" % (rf_input["feed"],) +\
+                                 "_IF%d" % (rf_input["ifChain"],) +\
+                                 "_%s" % (rf_input["polarization"],) +\
+                                 ".nmb"
+                dest_file_path = os.path.join(dest_dir, dest_file_name)
+                logging.debug("open output file: %s" % (dest_file_name,))
+                try:
+                    self.file_class_out.open(dest_file_path, 
+                                             new = False,
+                                             over = False,
+                                             size = 999999,
+                                             single = True)
+                    logging.debug("opened successfully in append mode")
+                except:
+                    self.file_class_out.open(dest_file_path, 
+                                             new = True,
+                                             over = False,
+                                             size = 999999,
+                                             single = True)
+                    logging.debug("opened successfully in create mode")
+                self.write_observations(subscan, rf_input, rf_index, section)
+                self.file_class_out.close()
 
-    def write_observations(self, section, pol, subscan):
-        for ndata in xrange(len(subscan["DATA TABLE"].data)):
-            logging.debug("section: %s pol: %s ndata %s" % (
-                                                           str(section),
-                                                           str(pol),
-                                                           str(ndata)))
+    def write_observations(self, subscan, rf_input, rf_index, section):
+        for data in subscan["DATA TABLE"].data:
             location = (subscan[0].header["SiteLongitude"] * u.rad,
                         subscan[0].header["SiteLatitude"] * u.rad)
             location = (location[0].to(u.deg),
                         location[1].to(u.deg))
-            observation_time = Time(subscan["DATA TABLE"].data["time"][ndata],
+            observation_time = Time(data["time"],
                                     format = "mjd",
                                     scale = "utc", 
                                     location = location)
             now_time = Time(datetime.utcnow(), scale="utc")
-            bandwidth = subscan["SECTION TABLE"].data["SampleRate"][section] / 2.0
-            nchan = subscan["SECTION TABLE"].data["bins"][section]
+            bandwidth = rf_input["bandwidth"]
+            nchan = section["bins"]
             freq_resolution = bandwidth / float(nchan)
             offsetFrequencyAt0 = 0
             if nchan % 2 == 0:
@@ -155,42 +157,43 @@ class DiscosScanConverter(object):
             #FIXME: get sidereal time right
             #obs.head.gen.st = observation_time.sidereal_time()
             obs.head.gen.st = 0.
-            obs.head.gen.az = subscan["DATA TABLE"].data["az"][ndata]
-            obs.head.gen.el = subscan["DATA TABLE"].data["el"][ndata]
+            obs.head.gen.az = data["az"]
+            obs.head.gen.el = data["el"]
             obs.head.gen.tau = 0.
             #FIXME: should we read antenna temperature?
-            obs.head.gen.tsys = 0. # file[5].data["Ch.."][i][0,1]
+            obs.head.gen.tsys = 0. # ANTENNA TEMP TABLE is broken with XARCOS
             obs.head.gen.time = subscan["SECTION TABLE"].header["Integration"] / 1000.
             obs.head.gen.xunit = code.xunit.velo  # Unused
 
             obs.head.pos.sourc = subscan[0].header["SOURCE"]
             obs.head.pos.epoch = 2000.0
-            obs.head.pos.lam = subscan["DATA TABLE"].data["raj2000"][ndata]
-            obs.head.pos.bet = subscan["DATA TABLE"].data["decj2000"][ndata]
+            obs.head.pos.lam = data["raj2000"]
+            obs.head.pos.bet = data["decj2000"]
             obs.head.pos.lamof = 0. #FIXME: leggere
             obs.head.pos.betof = 0. #FIXME: leggere
             obs.head.pos.proj = code.proj.none
             obs.head.pos.sl0p = 0. #FIXME: ?	
             obs.head.pos.sb0p = 0. #FIXME: ?	
-            obs.head.pos.sk0p = 0. #FIXME: ?	
+            obs.head.pos.sk0p = 0. #FIXME: ?
 
-            obs.head.spe.restf = self.summary[0][section]
-            obs.head.spe.nchan = subscan["SECTION TABLE"].data["bins"][section]
-            obs.head.spe.rchan = subscan["SECTION TABLE"].data["bins"][section] / 2 + 1
+            obs.head.spe.restf = self.summary["rest_frequency"]
+            obs.head.spe.nchan = nchan
+            obs.head.spe.rchan = nchan / 2 + 1
             obs.head.spe.fres = bandwidth / float(nchan)
             obs.head.spe.foff = offsetFrequencyAt0
             obs.head.spe.vres = -1. # FIXME: da calcolare come fits '11cd2r'
             obs.head.spe.voff = 0. #FIXME: ricavare da vlsr (fits '1vsou2r')
             obs.head.spe.bad = 0.
             obs.head.spe.image = 0.
-            obs.head.spe.vtype = code.velo.obs # FIXME: switch case
+            #nel fits abbiamo la frequenfa topocentrica calcolata
+            # quindi immagino che anche la velocita' sia uguale
+            obs.head.spe.vtype = code.velo.earth 
             obs.head.spe.doppler = 0. # FIXME: calcolare
             obs.head.spe.line = "LINE"
 
-            starting_bin = pol * nchan
+            starting_bin = (rf_index % 2) * nchan
             ending_bin = starting_bin + nchan
-            obs.datay = subscan["DATA TABLE"]\
-                        .data["Ch%d" % (section,)][ndata]\
+            obs.datay = data["Ch%d" % (section["id"],)]\
                         [starting_bin:ending_bin]\
                         .astype(np.float32)
 
@@ -206,13 +209,15 @@ class DiscosScanConverter(object):
         with fits.open(summary_file_path) as summary_file:
             logging.debug("loading summary from %s" % (summary_file_path,))
             summary_header = summary_file[0].header
-            rest_frequency = [summary_header[ri] # * u.MHz
-                              for ri in summary_header.keys() 
-                              if ri.startswith("RESTFREQ")]
+            rest_frequency = summary_header["RESTFREQ1"]
+            #rest_frequency = [summary_header[ri] # * u.MHz
+            #                  for ri in summary_header.keys() 
+            #                  if ri.startswith("RESTFREQ")]
             velocity = dict(vrad = summary_header["VRAD"],
                             vdef = summary_header["VDEF"],
                             vframe = summary_header["VFRAME"])
-        self.summary = (rest_frequency, velocity)
+        self.summary = (dict(rest_frequency = rest_frequency,
+                             velocity = velocity))
         self.got_summary = True
 
 
