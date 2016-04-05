@@ -21,6 +21,22 @@
 VERSION = "0.1.0-beta"
 
 import logging
+import re
+
+valid_onoff_geometry = re.compile("(?P<on>\d+)on_(?P<off>\d+)off_(?P<cal>\d+)cal",
+                                 flags = re.I)
+
+
+def parse_onoff_geometry(geometry):
+    m = valid_onoff_geometry.match(geometry)
+    if not m:
+        raise Exception("Invalid onoff sequence: %s" %(geometry,))
+    output_geometry = {}
+    for k,v in m.groupdict().iteritems():
+        output_geometry[k] = int(v)
+    logging.debug("parsed geometry: %s" % (str(output_geometry),))
+    return output_geometry
+
 
 def cmd_line():
     import argparse
@@ -34,6 +50,9 @@ def cmd_line():
     parser.add_argument('-o', '--output-dir', default="classconverter",
                         dest="output_dir",
                         help="output directory name")
+    parser.add_argument('-g', '--geometry', default="4on_4off_2cal",
+                        dest="geometry",
+                        help="scan geometry as \"<n>on_<m>off_<c>cal\"")
     parser.add_argument('source_dir', nargs='+',
                         help='directory path(s) to scans')
     parser.add_argument('--version', action='store_true', dest='show_version',
@@ -51,6 +70,7 @@ def cmd_line():
         logging.basicConfig(format="%(levelname)s: %(message)s",
                             level=logging.INFO)
     logger = logging.getLogger("discos2class")
+    geometry = parse_onoff_geometry(ns.geometry)
     logger.debug("Running with options:")
     for k,v in vars(ns).iteritems():
         logger.debug("\t%s:\t%s" % (k, str(v),))
@@ -65,9 +85,9 @@ def cmd_line():
             logging.warning("cannot create directory: %s" % (ns.output_dir,))
     for input_scan_directory in ns.source_dir:
         try:
-            converter = DiscosScanConverter(input_scan_directory)
-            converter.load_summary_info()
+            converter = DiscosScanConverter(input_scan_directory, geometry)
             converter.load_subscans()
+            converter.load_summary_info()
             converter.convert_subscans(ns.output_dir)
         except Exception, e:
             if ns.debug:

@@ -1,4 +1,5 @@
 *.fits
+*.pyc
 data
 *swp
 astropy_open_fits.py
