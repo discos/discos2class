@@ -11,3 +11,5 @@ build
 *.ps
 *~
 *.tar.gz
+jandata
+classconverter

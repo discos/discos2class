@@ -68,10 +68,10 @@ class ScanCycle(object):
         for s_id,section in self.data.iteritems():
             result[s_id] = dict()
             for pol_id, data in section.iteritems():
-                on = data['on'][0]["spectrum"] / data["on"][0]["samples"]
-                off = data['off'][0]["spectrum"] / data["off"][0]["samples"]
+                on = data['on'][0]["spectrum"] / data["on"][0]["integration"]
+                off = data['off'][0]["spectrum"] / data["off"][0]["integration"]
                 if "cal" in data.keys():
-                    cal = data['cal'][0]["spectrum"] / data["cal"][0]["samples"]
+                    cal = data['cal'][0]["spectrum"] / data["cal"][0]["integration"]
                 else:
                     cal = None
                 result[s_id][pol_id] = (on, off, cal)

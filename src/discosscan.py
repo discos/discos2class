@@ -153,6 +153,7 @@ class DiscosScanConverter(object):
         onoffcal = scan_cycle.onoffcal()
         for sec_id, v in scan_cycle.data.iteritems():
             for pol, data in v.iteritems():
+                logger.debug("opened section %d pol %s" % (sec_id, pol))
                 self._load_metadata(sec_id, pol, first_subscan_index)
 
                 outputfilename = self.observation_time.datetime.strftime("%Y%m%d-%H%M%S") + \
@@ -226,7 +227,9 @@ class DiscosScanConverter(object):
                     cal_mean = cal[start_bin:stop_bin].mean()
                     off_mean = off[start_bin:stop_bin].mean()
                     counts2kelvin = self.calibrationMark / (cal_mean - off_mean)
+                    logger.debug("c2k: %f" % (counts2kelvin,))
                     obs.head.gen.tsys = counts2kelvin * off_mean
+                    logger.debug("tsys: %f" % (counts2kelvin * off_mean,))
                     obs.datay = (on - off) * counts2kelvin
                 else:
                     obs.head.gen.tsys = 0. # ANTENNA TEMP TABLE is unknown
