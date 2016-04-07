@@ -114,7 +114,8 @@ $ ls classdata/20160331-104808-7-15-w3oh_class/
 20160331-104808_w3oh_SCAN2_SEC1_LCP.d2c  20160331-104808_w3oh_SCAN2_SEC2_RCP.d2c
 ```
 
-These files can be directly opened with **class** software. 
+Each file contains the integrated spectrum relative to the specified polarization for the specified backend section
+in that particular scan. These files can be directly opened with **class** software. 
 
 ##Data Calibration
 
@@ -127,10 +128,10 @@ from original fits files metadata. The procedure will run as:
 3. SpectrumInKelvin = (ON - OFF) * counts2kelvin = (ON - OFF) * Tsys / OFF.mean
 
 If you skip data calibration by specifying the **-s** command line option or if
- no **cal** subscan is present in the specified geometry the software will just
- compute the resulting spectrum as:
+no **cal** subscan is present in the specified geometry the software will just
+compute the resulting spectrum as:
  
-* (on - off) / off
+* (ON - OFF) / OFF
 
 
 
