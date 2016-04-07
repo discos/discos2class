@@ -2,10 +2,10 @@
 
 ##TOC
 
-* [Usage](#Usage)
-  - [Command line help](#Command-line-help)
-  - [An example session](#An-example-session)
-* [Data calibration](#Data-calibration)
+* [Usage](#usage)
+  - [Command line help](#command-line-help)
+  - [An example session](#an-example-session)
+* [Data calibration](#data-calibration)
 
 **discos2class** command line tool used to 
 convert discos spectroscopy files acquired with XARCOS into class native format.
