@@ -46,7 +46,7 @@ class DiscosScanException(Exception):
         super(DiscosScanException, self).__init__(message)
 
 class DiscosScanConverter(object):
-    def __init__(self, path=None, geometry={}):
+    def __init__(self, path=None, geometry={}, skip_calibration=False):
         self.scan_path = path
         self.got_summary = False
         self.file_class_out = pyclassfiller.ClassFileOut()
@@ -55,6 +55,7 @@ class DiscosScanConverter(object):
         self.geometry_size = sum(self.geometry.values())
         self.n_cycles = 0
         self.integration = 0
+        self.skip_calibration = skip_calibration
 
     def load_subscans(self):
         for subscan_file in os.listdir(self.scan_path):
@@ -148,7 +149,6 @@ class DiscosScanConverter(object):
                 self.central_channel = (nchan / 2) + 1
                 self.offsetFrequencyAt0 = 0
 
-
     def write_observation(self, scan_cycle, first_subscan_index):
         onoffcal = scan_cycle.onoffcal()
         for sec_id, v in scan_cycle.data.iteritems():
@@ -215,23 +215,39 @@ class DiscosScanConverter(object):
                 obs.head.spe.voff = self.summary["velocity"]["vrad"]
                 obs.head.spe.bad = 0.
                 obs.head.spe.image = 0.
-                obs.head.spe.vtype = code.velo.earth 
+                if self.summary["velocity"]["vframe"] == "BARY":
+                    logger.debug("velocity: HELIO")
+                    obs.head.spe.vtype = code.velo.helio
+                elif((self.summary["velocity"]["vframe"] == "LSRK") or
+                   (self.summary["velocity"]["vframe"] == "LSRD")):
+                    obs.head.spe.vtype = code.velo.lsr
+                    logger.debug("velocity: LSR")
+                elif self.summary["velocity"]["vframe"] == "TOPCEN":
+                    obs.head.spe.vtype = code.velo.obs
+                    logger.debug("velocity: OBS")
+                else:
+                    obs.head.spe.vtype = code.velo.unk
+                    logger.debug("velocity: UNK")
                 obs.head.spe.doppler = -((self.central_frequency - self.summary["rest_frequency"]) /
                                           self.summary["rest_frequency"]) * CLIGHT
-                obs.head.spe.line = "LINE"
+                obs.head.spe.line = "SEC%d-%s" % (sec_id, pol)
 
                 on, off, cal = onoffcal[sec_id][pol]
-                if cal is not None:
+                if((not self.skip_calibration) and 
+                   (cal is not None)):
                     start_bin = self.bins / 3
                     stop_bin = 2 * start_bin
                     cal_mean = cal[start_bin:stop_bin].mean()
                     off_mean = off[start_bin:stop_bin].mean()
                     counts2kelvin = self.calibrationMark / (cal_mean - off_mean)
                     logger.debug("c2k: %f" % (counts2kelvin,))
-                    obs.head.gen.tsys = counts2kelvin * off_mean
-                    logger.debug("tsys: %f" % (counts2kelvin * off_mean,))
-                    obs.datay = (on - off) * counts2kelvin
+                    tsys = counts2kelvin * off_mean
+                    obs.head.gen.tsys = tsys
+                    logger.debug("tsys: %f" % (tsys,))
+                    obs.datay = (on - off) * (tsys / off_mean)
+                    logger.debug("on - off: %f" % ((on - off).mean(),))
                 else:
+                    logger.debug("skip calibration")
                     obs.head.gen.tsys = 0. # ANTENNA TEMP TABLE is unknown
                     obs.datay = (on - off) / off
                 obs.write()

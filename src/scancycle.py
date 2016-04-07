@@ -29,12 +29,12 @@ class ScanCycle(object):
     def sections(self):
         return self.data.keys()
 
-    def add_data(self, section_id, flag, pol, data, integration):
+    def add_data(self, section_id, flag, pol, data, samples, integration):
         """
         @param data: a single spectrum file containing all polarizations
         """
         self.data[section_id][pol][flag]["spectrum"] += data
-        self.data[section_id][pol][flag]["samples"] += 1
+        self.data[section_id][pol][flag]["samples"] += samples
         self.data[section_id][pol][flag]["integration"] += integration
 
     def add_data_file(self, fits_file, flag="on"):
@@ -61,6 +61,7 @@ class ScanCycle(object):
                           flag,
                           pol,
                           data_sum[data_start:data_stop],
+                          len(data),
                           total_integration)
 
     def onoffcal(self):
@@ -68,10 +69,10 @@ class ScanCycle(object):
         for s_id,section in self.data.iteritems():
             result[s_id] = dict()
             for pol_id, data in section.iteritems():
-                on = data['on'][0]["spectrum"] / data["on"][0]["integration"]
-                off = data['off'][0]["spectrum"] / data["off"][0]["integration"]
+                on = data['on'][0]["spectrum"] / data["on"][0]["samples"]
+                off = data['off'][0]["spectrum"] / data["off"][0]["samples"]
                 if "cal" in data.keys():
-                    cal = data['cal'][0]["spectrum"] / data["cal"][0]["integration"]
+                    cal = data['cal'][0]["spectrum"] / data["cal"][0]["samples"]
                 else:
                     cal = None
                 result[s_id][pol_id] = (on, off, cal)
