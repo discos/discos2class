@@ -9,6 +9,8 @@ convert discos spectroscopy files acquired with XARCOS into class native format.
   - [Command line help](#command-line-help)
   - [An example session](#an-example-session)
 * [Data calibration](#data-calibration)
+* [Requirements](#requirements)
+* [Installation](#installation)
 
 
 **WARNING: this project is in a very early beta version and it is not 
@@ -117,6 +119,24 @@ $ ls classdata/20160331-104808-7-15-w3oh_class/
 Each file contains the integrated spectrum relative to the specified polarization for the specified backend section
 in that particular scan. These files can be directly opened with **class** software. 
 
+You can now use class software to inspect your data: 
+
+```bash
+$ cd classdata/20160331-104808-7-15-w3oh_class $
+$ class
+...
+LAS> file in 20160331-104808_w3oh_SCAN2_SEC0_LCP.d2c
+I-CONVERT,  File is  [Native]
+I-INPUT,  20160331-104808_w3oh_SCAN2_SEC0_LCP.d2c successfully opened
+LAS> find /all
+I-FIND,  1 observation found
+LAS> get 1
+I-GET,  Observation 1; Vers 1 Scan 2
+LAS> plot 
+```
+![Class screenshot](class_screenshot.png?raw=true "Class Screenshot")
+
+
 ##Data Calibration
 
 If at least one **cal** subscan is present in the specified geometry, the software
@@ -133,6 +153,26 @@ compute the resulting spectrum as:
  
 * (ON - OFF) / OFF
 
+##Requirements
+
+The software is develope in Python, using python2.7 and it depends on  
+external python packages:
+
+* astropy
+* pyclassfiller
+
+Any astropy version >= 1.0 should be enough for the software to work, while 
+pyclassfiller is provided by the **GILDAS** package that you can find at 
+https://www.iram.fr/IRAMFR/GILDAS/ . We have installed the latest stable release 
+that is **GILDAS Version: mar16a**
+
+## Installation
+
+The command line tool can be installed via:
+
+```bash
+$ python setup.py install
+```
 
 
 
