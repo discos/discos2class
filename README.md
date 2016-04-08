@@ -43,12 +43,13 @@ optional arguments:
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                         output directory name
   -c DUTY_CYCLE, --duty-cycle DUTY_CYCLE
-                        scan duty cycle as "<n>on<m>off<c>cal" elements must
+                        scan duty cycle as "<on>:<off>:<cal>", elements must
                         be all presente but can be zeroes.
   -s, --skip-calibration
                         skip kelvin calibration and computes only ((on - off)
                         / off) ignoring CAL signal
   --version             print version information and exit
+
 ```
 
 As you can see, the program elaborates scans found in one ore more source 
@@ -75,7 +76,7 @@ scan configuration of 10 spectra on-source, 10 spectra off-source and 1 spectrum
 off-source with calibration mark switched on (duty cycle 10-10-1), for a total of 21 subscans.
 
 ```bash
-$ discos2class -o classdata -g 10on10off1cal xarcos_test_data_set/20160331-104808-7-15-w3oh
+$ discos2class -o classdata -g 10:10:1 xarcos_test_data_set/20160331-104808-7-15-w3oh
 I-FILE,  File is version 2 (record length: 1024 words)
 I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC0_RCP.d2c initialized
 I-FILE,  File is version 2 (record length: 1024 words)
@@ -94,7 +95,7 @@ I-FILE,  File is version 2 (record length: 1024 words)
 I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC3_LCP.d2c initialized
 ```
 
-We have invoked the discos2class command specifying the scan configuration ("10on10off1cal")
+We have invoked the discos2class command specifying the scan configuration (10 on 10 off 1 cal)
 and the input and output data directories, from the command output we can see
 which files have been created.
 

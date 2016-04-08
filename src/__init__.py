@@ -23,7 +23,7 @@ VERSION = "0.1.0-beta"
 import logging
 import re
 
-valid_onoff_duty_cycle = re.compile("(?P<on>\d+)on(?P<off>\d+)off(?P<cal>\d+)cal",
+valid_onoff_duty_cycle = re.compile("(?P<on>\d+):(?P<off>\d+):(?P<cal>\d+)",
                                  flags = re.I)
 
 
@@ -50,9 +50,9 @@ def cmd_line():
     parser.add_argument('-o', '--output-dir', default="classconverter",
                         dest="output_dir",
                         help="output directory name")
-    parser.add_argument('-c', '--duty-cycle', default="4on4off2cal",
+    parser.add_argument('-c', '--duty-cycle', default="4:4:2",
                         dest="duty_cycle",
-                        help="scan duty cycle as \"<n>on<m>off<c>cal\" elements\
+                        help="scan duty cycle as \"<on>:<off>:<cal>\", elements\
                         must be all presente but can be zeroes.")
     parser.add_argument('-s', '--skip-calibration', action='store_true',
                         default=False, dest="skip_calibration",
