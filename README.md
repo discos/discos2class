@@ -1,7 +1,7 @@
 # discos2class
 
 **discos2class** command line tool used to 
-convert discos spectroscopy files acquired with XARCOS into class native format.
+convert DISCOS spectroscopy files acquired with XARCOS into CLASS native format.
 
 ##TOC
 
@@ -18,12 +18,12 @@ guaranteed to be working at all, neither producing correct results**
 
 ##Usage
 
-The tool operates on data directories of fits files saved by the DISCOS system,
+The tool operates on data directories of FITS files saved by the DISCOS system,
 where each directory matches a schedule **SCAN**
 
 ###Command line help
 
-The command line help explains what options are available and gives hints about
+The command line help explains which options are available and gives hints about
 usage:
 
 
@@ -51,8 +51,8 @@ optional arguments:
   --version             print version information and exit
 ```
 
-As you can see the program elaborates scans found in one ore more source 
-directories and saves class converted spectra in corresponding directories 
+As you can see, the program elaborates scans found in one ore more source 
+directories and saves CLASS-converted spectra in corresponding directories, 
 created in an output directory folder. 
 
 ###An example session
@@ -70,9 +70,9 @@ $ ls xarcos_test_data_set/20160331-104808-7-15-w3oh/
 ```
 
 As you can see the source directory contains a whole scan including the 
-**summary.fits** file. In this case **w3oh** source has been observed using a
-scan geometry of 10 spectra onsource, 10 spectra offsource and 1 spectra 
-offsource with calibration mark activated, for a total of 21 subscans.
+**summary.fits** file. In this case the **w3oh** source has been observed using a
+scan configuration of 10 spectra on-source, 10 spectra off-source and 1 spectrum 
+off-source with calibration mark switched on (duty cycle 10-10-1), for a total of 21 subscans.
 
 ```bash
 $ discos2class -o classdata -g 10on10off1cal xarcos_test_data_set/20160331-104808-7-15-w3oh
@@ -94,19 +94,19 @@ I-FILE,  File is version 2 (record length: 1024 words)
 I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC3_LCP.d2c initialized
 ```
 
-We have invoked the discos2class command specifying the san geometry ("10on10off1cal")
-and the intpu and output data directories, from the command output we can see
-what files have been created.
+We have invoked the discos2class command specifying the scan configuration ("10on10off1cal")
+and the input and output data directories, from the command output we can see
+which files have been created.
 
-In the destination directory a new directory is created named exactly as the 
-source directory plus the **_class** suffix:
+In the destination directory a new directory is created. It is named exactly as the 
+source directory adding the **_class** suffix:
 
 ```bash
 $ ls classdata/
 20160331-104808-7-15-w3oh_class
 ```
 
-Inside the directory a new class file is created for each **SECTION** 
+Inside the directory a new CLASS file is created for each **SECTION** 
 **POLARIZATION** and **SCAN NUMBER** combination foud in the original files:
 
 ```bash
@@ -117,9 +117,9 @@ $ ls classdata/20160331-104808-7-15-w3oh_class/
 ```
 
 Each file contains the integrated spectrum relative to the specified polarization for the specified backend section
-in that particular scan. These files can be directly opened with **class** software. 
+in that particular scan. These files can be directly opened with **CLASS** software. 
 
-You can now use class software to inspect your data: 
+You can now use CLASS software to inspect your data: 
 
 ```bash
 $ cd classdata/20160331-104808-7-15-w3oh_class $
@@ -139,23 +139,23 @@ LAS> plot
 
 ##Data Calibration
 
-If at least one **cal** subscan is present in the specified geometry, the software
-will calibrate data in Kelvin using the calibration mark temperature obtained
-from original fits files metadata. The procedure will run as:
+If at least one **cal** subscan is present in the specified duty cycle, the software
+will calibrate spectra in Kelvin using the calibration mark temperature (obtained
+from metadata present in the original FITS files). The procedure will run as:
 
 1. Tcal / (CAL.mean - OFF.mean) = counts2kelvin
 2. Tsys = counts2kelvin * OFF.mean
 3. SpectrumInKelvin = (ON - OFF) * counts2kelvin = (ON - OFF) * Tsys / OFF.mean
 
-If you skip data calibration by specifying the **-s** command line option or if
-no **cal** subscan is present in the specified geometry the software will just
+If you skip data calibration by specifying the **-s** command line option, or if
+no **cal** subscan is present in the specified duty cycle, the software will just
 compute the resulting spectrum as:
  
 * (ON - OFF) / OFF
 
 ##Requirements
 
-The software is develope in Python, using python2.7 and it depends on  
+The software is developed in Python, using python2.7, and it depends on  
 external python packages:
 
 * astropy
