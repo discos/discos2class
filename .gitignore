@@ -13,3 +13,4 @@ build
 *.tar.gz
 jandata
 classconverter
+classdata
