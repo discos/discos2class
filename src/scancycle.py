@@ -6,9 +6,9 @@ import numpy as np
 POLARIZATIONS = ["LCP", "RCP"]
 
 class ScanCycle(object):
-    def __init__(self, sections, geometry):
-        self.geometry = geometry
-        self.cycle_length = sum(geometry.values())
+    def __init__(self, sections, duty_cycle):
+        self.duty_cycle = duty_cycle
+        self.cycle_length = sum(duty_cycle.values())
         self.data = {}
         for section in sections:
             if section["type"] == "simple":
@@ -19,7 +19,7 @@ class ScanCycle(object):
             self.data[section["id"]] = {}
             for pol in pols:
                 self.data[section["id"]][pol] = {}
-                for k,v in self.geometry.iteritems():
+                for k,v in self.duty_cycle.iteritems():
                     self.data[section["id"]][pol][k] = np.zeros(1, 
                                         dtype=[('spectrum',np.float32, (bins,)),
                                         ('samples', np.int),

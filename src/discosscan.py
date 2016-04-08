@@ -46,13 +46,13 @@ class DiscosScanException(Exception):
         super(DiscosScanException, self).__init__(message)
 
 class DiscosScanConverter(object):
-    def __init__(self, path=None, geometry={}, skip_calibration=False):
+    def __init__(self, path=None, duty_cycle={}, skip_calibration=False):
         self.scan_path = path
         self.got_summary = False
         self.file_class_out = pyclassfiller.ClassFileOut()
         self.subscans = []
-        self.geometry = geometry
-        self.geometry_size = sum(self.geometry.values())
+        self.duty_cycle = duty_cycle
+        self.duty_cycl_size = sum(self.duty_cycle.values())
         self.n_cycles = 0
         self.integration = 0
         self.skip_calibration = skip_calibration
@@ -87,25 +87,25 @@ class DiscosScanConverter(object):
         except Exception, e:
             logger.error("output directory exists: %s" % (self.dest_subdir,))
             sys.exit(1)
-        for i in range(len(self.subscans) / self.geometry_size):
+        for i in range(len(self.subscans) / self.duty_cycle_size):
             self.n_cycles += 1
-            scan_cycle = self.convert_cycle(i * self.geometry_size)
-            self.write_observation(scan_cycle, i * self.geometry_size)
+            scan_cycle = self.convert_cycle(i * self.duty_cycle_size)
+            self.write_observation(scan_cycle, i * self.duty_cycle_size)
 
     def convert_cycle(self, index):
         current_index = index
         with fits.open(self.subscans[index][0]) as first_subscan:
             scan_cycle = ScanCycle(first_subscan["SECTION TABLE"].data, 
-                                   self.geometry)
-        for i in range(self.geometry['on']):
+                                   self.duty_cycle)
+        for i in range(self.duty_cycle['on']):
             with fits.open(self.subscans[current_index][0]) as spec:
                 scan_cycle.add_data_file(spec, "on")
             current_index += 1
-        for i in range(self.geometry['off']):
+        for i in range(self.duty_cycle['off']):
             with fits.open(self.subscans[current_index][0]) as spec:
                 scan_cycle.add_data_file(spec, "off")
             current_index += 1
-        for i in range(self.geometry['cal']):
+        for i in range(self.duty_cycle['cal']):
             with fits.open(self.subscans[current_index][0]) as spec:
                 scan_cycle.add_data_file(spec, "cal")
             current_index += 1
