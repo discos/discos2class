@@ -52,7 +52,7 @@ class DiscosScanConverter(object):
         self.file_class_out = pyclassfiller.ClassFileOut()
         self.subscans = []
         self.duty_cycle = duty_cycle
-        self.duty_cycl_size = sum(self.duty_cycle.values())
+        self.duty_cycle_size = sum(self.duty_cycle.values())
         self.n_cycles = 0
         self.integration = 0
         self.skip_calibration = skip_calibration

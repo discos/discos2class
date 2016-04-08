@@ -29,7 +29,7 @@ usage:
 
 ```bash
 $ discos2class --help
-usage: discos2class [-h] [-d] [-o OUTPUT_DIR] [-g GEOMETRY] [-s] [--version]
+usage: discos2class [-h] [-d] [-o OUTPUT_DIR] [-c DUTY_CYCLE] [-s] [--version]
                     source_dir [source_dir ...]
 
 Convert discos SCANs into class files
@@ -42,9 +42,9 @@ optional arguments:
   -d                    enable debug messages
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                         output directory name
-  -g GEOMETRY, --geometry GEOMETRY
-                        scan geometry as "<n>on<m>off<c>cal" elements must be
-                        all presente but can be zeroes.
+  -c DUTY_CYCLE, --duty-cycle DUTY_CYCLE
+                        scan duty cycle as "<n>on<m>off<c>cal" elements must
+                        be all presente but can be zeroes.
   -s, --skip-calibration
                         skip kelvin calibration and computes only ((on - off)
                         / off) ignoring CAL signal
