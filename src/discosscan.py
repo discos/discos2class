@@ -136,10 +136,12 @@ class DiscosScanConverter(object):
                    (rf["section"] == section)):
                     self.frequency = rf["frequency"]
                     self.bandwidth = rf["bandwidth"]
+
                     self.LO = rf["localOscillator"]
                     self.calibrationMark = rf["calibratonMark"]
                     self.feed = rf["feed"]
             self.freq_resolution = self.bandwidth / float(self.bins)
+
             self.central_frequency = self.frequency + self.bandwidth / 2.0
             offsetFrequencyAt0 = 0
             if self.bins % 2 == 0:
@@ -193,7 +195,7 @@ class DiscosScanConverter(object):
                 obs.head.gen.tau = 0.
                 #FIXME: should we read antenna temperature?
                 obs.head.gen.time = data["on"][0]["integration"]
-                obs.head.gen.xunit = code.xunit.velo  # Unused
+                obs.head.gen.xunit = code.xunit.freq  # Unused
 
                 obs.head.pos.sourc = self.source_name
                 obs.head.pos.epoch = 2000.0
@@ -209,9 +211,14 @@ class DiscosScanConverter(object):
                 obs.head.spe.restf = self.summary["rest_frequency"]
                 obs.head.spe.nchan = self.bins
                 obs.head.spe.rchan = self.central_channel
-                obs.head.spe.fres = self.freq_resolution
+                logger.debug("central channel  %f" %  self.central_channel)
+
+                obs.head.spe.fres = self.freq_resolution 
+
                 obs.head.spe.foff = self.offsetFrequencyAt0
-                obs.head.spe.vres = (self.freq_resolution / self.central_frequency) * CLIGHT
+                logger.debug("offset at 0  %f" %  self.offsetFrequencyAt0)
+
+                obs.head.spe.vres = (self.freq_resolution / self.central_frequency) * CLIGHT # frequency resolution must have the same unity like the central_frequency
                 obs.head.spe.voff = self.summary["velocity"]["vrad"]
                 obs.head.spe.bad = 0.
                 obs.head.spe.image = 0.
@@ -228,8 +235,17 @@ class DiscosScanConverter(object):
                 else:
                     obs.head.spe.vtype = code.velo.unk
                     logger.debug("velocity: UNK")
-                obs.head.spe.doppler = -((self.central_frequency - self.summary["rest_frequency"]) /
+                
+                v_observer = -((self.central_frequency - self.summary["rest_frequency"]) /
                                           self.summary["rest_frequency"]) * CLIGHT
+                
+                
+                obs.head.spe.doppler = -  (v_observer + obs.head.spe.voff) / CLIGHT #doppler in units of c light
+                                        #the negative sign is a class convention. 
+                
+                
+		logger.debug("Doppler  %f" %  obs.head.spe.doppler)
+
                 obs.head.spe.line = "SEC%d-%s" % (sec_id, pol)
 
                 on, off, cal = onoffcal[sec_id][pol]
