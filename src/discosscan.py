@@ -123,6 +123,9 @@ class DiscosScanConverter(object):
                                          format = "mjd",
                                          scale = "utc", 
                                          location = self.location)
+	    self.azimut=subscan["DATA TABLE"].data["az"][0]
+	    self.elevation=subscan["DATA TABLE"].data["el"][0]
+	    
             self.record_time = Time(subscan[0].header["DATE"], scale="utc")
             self.antenna = subscan[0].header["ANTENNA"]
             self.ScanID = subscan[0].header["SCANID"]
@@ -190,8 +193,8 @@ class DiscosScanConverter(object):
                 #FIXME: get sidereal time right
                 #obs.head.gen.st = observation_time.sidereal_time()
                 obs.head.gen.st = 0.
-                obs.head.gen.az = self.ra
-                obs.head.gen.el = self.dec
+                obs.head.gen.az = self.azimut  # unit radians
+                obs.head.gen.el = self.elevation # radians
                 obs.head.gen.tau = 0.
                 #FIXME: should we read antenna temperature?
                 obs.head.gen.time = data["on"][0]["integration"]
@@ -218,7 +221,7 @@ class DiscosScanConverter(object):
                 obs.head.spe.foff = self.offsetFrequencyAt0
                 logger.debug("offset at 0  %f" %  self.offsetFrequencyAt0)
 
-                obs.head.spe.vres = (self.freq_resolution / self.central_frequency) * CLIGHT # frequency resolution must have the same unity like the central_frequency
+                obs.head.spe.vres = - (self.freq_resolution / self.central_frequency) * CLIGHT # frequency resolution must have the same unity like the central_frequency
                 obs.head.spe.voff = self.summary["velocity"]["vrad"]
                 obs.head.spe.bad = 0.
                 obs.head.spe.image = 0.
