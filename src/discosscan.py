@@ -77,16 +77,16 @@ class DiscosScanConverter(object):
             self.summary = summary[0].header
 
     def convert_subscans(self, dest_dir=None):
-        if not dest_dir:
-            dest_dir = self.scan_path
-        dest_subdir_name = os.path.normpath(self.scan_path).split(os.path.sep)[-1]
-        dest_subdir_name += "_class"
-        self.dest_subdir = os.path.join(dest_dir, dest_subdir_name)
-        try:
-            os.makedirs(self.dest_subdir)
-        except Exception, e:
-            logger.error("output directory exists: %s" % (self.dest_subdir,))
-            sys.exit(1)
+        self.dest_dir = dest_dir
+        if not self.dest_dir:
+            self.dest_dir = self.scan_path
+        else:
+            try:
+                os.makedirs(self.dest_dir)
+            except Exception, e:
+                if not os.path.isdir(self.dest_dir):
+                    logger.error("cannot create output dir: %s" % (self.dest_dir,))
+                    sys.exit(1)
         for i in range(len(self.subscans) / self.duty_cycle_size):
             self.n_cycles += 1
             scan_cycle = self.convert_cycle(i * self.duty_cycle_size)
@@ -165,18 +165,25 @@ class DiscosScanConverter(object):
                 logger.debug("opened section %d pol %s" % (sec_id, pol))
                 self._load_metadata(sec_id, pol, first_subscan_index)
 
-                outputfilename = self.observation_time.datetime.strftime("%Y%m%d-%H%M%S") + \
+                outputfilename = self.observation_time.datetime.strftime("%Y%j") + \
                                  "_" + self.source_name +\
-                                 "_SCAN" + str(self.ScanID) + \
-                                 "_SEC" + str(sec_id) + \
-                                 "_" + str(pol) + \
                                  FILE_EXTENSION
-                output_file_path = os.path.join(self.dest_subdir, outputfilename)
-                self.file_class_out.open(output_file_path,
-                                         new = True,
-                                         over = True,
-                                         size = 999999,
-                                         single = True)
+                output_file_path = os.path.join(self.dest_dir, outputfilename)
+                try: 
+                    logger.debug("try to open file %s" % (output_file_path,))
+                    self.file_class_out.open(output_file_path,
+                                             new = False,
+                                             over = False,
+                                             size = 999999,
+                                             single = True)
+                    logger.info("append observation to file %s" % (output_file_path,))
+                except:
+                    self.file_class_out.open(output_file_path,
+                                             new = True,
+                                             over = False,
+                                             size = 999999,
+                                             single = True)
+                    logger.info("open new file %s" % (output_file_path,))
 
                 obs = pyclassfiller.ClassObservation()
                 obs.head.presec[:]            = False  # Disable all sections except...
