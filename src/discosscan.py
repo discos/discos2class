@@ -141,7 +141,11 @@ class DiscosScanConverter(object):
                     self.bandwidth = rf["bandwidth"]
 
                     self.LO = rf["localOscillator"]
-                    self.calibrationMark = rf["calibratonMark"]
+                    try:
+                        self.calibrationMark = rf["calibrationMark"]
+                    except:
+                        #For retrocompatibility
+                        self.calibrationMark = rf["calibratonMark"]
                     self.feed = rf["feed"]
             self.freq_resolution = self.bandwidth / float(self.bins)
 
