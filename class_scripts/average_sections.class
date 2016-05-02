@@ -1,0 +1,18 @@
+find /line sec0*
+aver /nocheck line
+modify linename SEC0-AVERAGE
+write
+find /line sec1*
+aver /nocheck line
+modify linename SEC1-AVERAGE
+write
+find /line sec2*
+aver /nocheck line
+modify linename SEC2-AVERAGE
+write
+find /line sec3*
+aver /nocheck line
+modify linename SEC3-AVERAGE
+write
+find /line *AVERAGE
+list
