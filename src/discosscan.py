@@ -150,7 +150,12 @@ class DiscosScanConverter(object):
             self.freq_resolution = self.bandwidth / float(self.bins)
 
             self.central_frequency = self.frequency + self.bandwidth / 2.0
-            self.rest_frequency = self.summary["rest_frequency"][section]
+            try:
+                self.rest_frequency = self.summary["rest_frequency"][section]
+            except:
+                #Fallback procedure loading only first restfreq
+                logger.warning("using the same rest frequency for each section")
+                self.rest_frequency = self.summary["rest_frequency"][0]
             offsetFrequencyAt0 = 0
             if self.bins % 2 == 0:
                 self.central_channel = self.bins / 2
