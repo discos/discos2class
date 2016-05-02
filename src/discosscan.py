@@ -176,14 +176,14 @@ class DiscosScanConverter(object):
                                              new = False,
                                              over = False,
                                              size = 999999,
-                                             single = True)
+                                             single = False)
                     logger.info("append observation to file %s" % (output_file_path,))
                 except:
                     self.file_class_out.open(output_file_path,
                                              new = True,
                                              over = False,
                                              size = 999999,
-                                             single = True)
+                                             single = False)
                     logger.info("open new file %s" % (output_file_path,))
 
                 obs = pyclassfiller.ClassObservation()
