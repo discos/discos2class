@@ -153,6 +153,37 @@ LAS> plot
 ```
 ![Class screenshot](class_screenshot.png?raw=true "Class Screenshot")
 
+###Class Utility scripts
+
+In the package directory **class_scripts** are located scripts callable from the
+class elaboration software. These scripts are very naive, I'm not an experienced 
+class users and I devloped these scripts only as shortcuts for common operations
+I'm doing in the development process. Nevertheless if an experienced user is
+willing to write more complex elaboration pipelines, this is where those should be put.
+
+At the moment we have defined: 
+
+  * **average_sections** : for sections 0 to 3 make an average of all observations
+     in the current file and adds a new observation of line **SECN-AVERAGE**
+     
+Using the scripts is accomplished via the **@** operator in a class session:
+
+```bash
+LAS> @ class_scripts/average_sections
+I-FIND,  8 observations found
+Consistency checks:
+  Checking Data type and regular x-axis sampling
+...
+
+I-WRITE,  Observation #36;1 successfully written
+I-FIND,  4 observations found
+Current index contains:
+ N;V Source       Line         Telescope      Lambda     Beta Sys  Sca Sub
+33;1 S140         SEC0-AVERAGE MEDICINA         +0.0     +0.0 Eq     1 1
+34;1 S140         SEC1-AVERAGE MEDICINA         +0.0     +0.0 Eq     1 1
+35;1 S140         SEC2-AVERAGE MEDICINA         +0.0     +0.0 Eq     1 1
+36;1 S140         SEC3-AVERAGE MEDICINA         +0.0     +0.0 Eq     1 1
+```
 
 ##Data Calibration
 
