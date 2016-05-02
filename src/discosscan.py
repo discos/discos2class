@@ -150,6 +150,7 @@ class DiscosScanConverter(object):
             self.freq_resolution = self.bandwidth / float(self.bins)
 
             self.central_frequency = self.frequency + self.bandwidth / 2.0
+            self.rest_frequency = self.summary["rest_frequency"][section]
             offsetFrequencyAt0 = 0
             if self.bins % 2 == 0:
                 self.central_channel = self.bins / 2
@@ -222,7 +223,7 @@ class DiscosScanConverter(object):
                 obs.head.pos.sb0p = 0. #FIXME: ?	
                 obs.head.pos.sk0p = 0. #FIXME: ?
 
-                obs.head.spe.restf = self.summary["rest_frequency"]
+                obs.head.spe.restf = self.rest_frequency
                 obs.head.spe.nchan = self.bins
                 obs.head.spe.rchan = self.central_channel
                 logger.debug("central channel  %f" %  self.central_channel)
@@ -250,8 +251,8 @@ class DiscosScanConverter(object):
                     obs.head.spe.vtype = code.velo.unk
                     logger.debug("velocity: UNK")
                 
-                v_observer = -((self.central_frequency - self.summary["rest_frequency"]) /
-                                          self.summary["rest_frequency"]) * CLIGHT
+                v_observer = -((self.central_frequency - self.rest_frequency) /
+                                          self.rest_frequency) * CLIGHT
                 
                 
                 obs.head.spe.doppler = -  (v_observer + obs.head.spe.voff) / CLIGHT #doppler in units of c light
@@ -293,10 +294,13 @@ class DiscosScanConverter(object):
         with fits.open(summary_file_path) as summary_file:
             logger.debug("loading summary from %s" % (summary_file_path,))
             summary_header = summary_file[0].header
-            rest_frequency = summary_header["RESTFREQ1"]
-            #rest_frequency = [summary_header[ri] # * u.MHz
-            #                  for ri in summary_header.keys() 
-            #                  if ri.startswith("RESTFREQ")]
+            rest_frequency = []
+            index_restfreq = 1
+            while summary_header.get("RESTFREQ%d" % (index_restfreq,)):
+                rest_frequency.append(summary_header.get("RESTFREQ%d" %
+                                                         (index_restfreq,)))
+                index_restfreq += 1
+            logger.debug("got rest freq: %s", str(rest_frequency))
             velocity = dict(vrad = summary_header["VRAD"],
                             vdef = summary_header["VDEF"],
                             vframe = summary_header["VFRAME"])
