@@ -59,7 +59,7 @@ created in an output directory folder.
 ###An example session
 
 ```bash
-$ ls xarcos_test_data_set/20160331-104808-7-15-w3oh/
+$ ls data/xarcos_test_data_set/20160331-104808-7-15-w3oh/
 20160331-104808-7-15-w3oh_002_001.fits  20160331-105255-7-15-w3oh_002_009.fits  20160331-105749-7-15-w3oh_002_017.fits
 20160331-104844-7-15-w3oh_002_002.fits  20160331-105331-7-15-w3oh_002_010.fits  20160331-105825-7-15-w3oh_002_018.fits
 20160331-104920-7-15-w3oh_002_003.fits  20160331-105414-7-15-w3oh_002_011.fits  20160331-105900-7-15-w3oh_002_019.fits
@@ -76,64 +76,80 @@ scan configuration of 10 spectra on-source, 10 spectra off-source and 1 spectrum
 off-source with calibration mark switched on (duty cycle 10-10-1), for a total of 21 subscans.
 
 ```bash
-$ discos2class -o classdata -g 10:10:1 xarcos_test_data_set/20160331-104808-7-15-w3oh
+$ discos2class -o classdata/xarcos_test/ -c 10:10:1 data/xarcos_test_data_set/20160331-104808-7-15-w3oh
+E-OPEN,  Open error file classdata/xarcos_test/2016091_w3oh.d2c
+E-OPEN,  No such file or directory (O/S errno #    2)
 I-FILE,  File is version 2 (record length: 1024 words)
-I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC0_RCP.d2c initialized
-I-FILE,  File is version 2 (record length: 1024 words)
-I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC0_LCP.d2c initialized
-I-FILE,  File is version 2 (record length: 1024 words)
-I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC1_RCP.d2c initialized
-I-FILE,  File is version 2 (record length: 1024 words)
-I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC1_LCP.d2c initialized
-I-FILE,  File is version 2 (record length: 1024 words)
-I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC2_RCP.d2c initialized
-I-FILE,  File is version 2 (record length: 1024 words)
-I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC2_LCP.d2c initialized
-I-FILE,  File is version 2 (record length: 1024 words)
-I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC3_RCP.d2c initialized
-I-FILE,  File is version 2 (record length: 1024 words)
-I-NEWPUT,  classdata/20160331-104808-7-15-w3oh_class/20160331-104808_w3oh_SCAN2_SEC3_LCP.d2c initialized
+I-NEWPUT,  classdata/xarcos_test/2016091_w3oh.d2c initialized
+INFO: open new file classdata/xarcos_test/2016091_w3oh.d2c
+I-CONVERT,  File is  [Native]
+I-OUTPUT,  classdata/xarcos_test/2016091_w3oh.d2c successfully opened
+INFO: append observation to file classdata/xarcos_test/2016091_w3oh.d2c
+I-CONVERT,  File is  [Native]
+I-OUTPUT,  classdata/xarcos_test/2016091_w3oh.d2c successfully opened
+INFO: append observation to file classdata/xarcos_test/2016091_w3oh.d2c
+I-CONVERT,  File is  [Native]
+I-OUTPUT,  classdata/xarcos_test/2016091_w3oh.d2c successfully opened
+INFO: append observation to file classdata/xarcos_test/2016091_w3oh.d2c
+I-CONVERT,  File is  [Native]
+I-OUTPUT,  classdata/xarcos_test/2016091_w3oh.d2c successfully opened
+INFO: append observation to file classdata/xarcos_test/2016091_w3oh.d2c
+I-CONVERT,  File is  [Native]
+I-OUTPUT,  classdata/xarcos_test/2016091_w3oh.d2c successfully opened
+INFO: append observation to file classdata/xarcos_test/2016091_w3oh.d2c
+I-CONVERT,  File is  [Native]
+I-OUTPUT,  classdata/xarcos_test/2016091_w3oh.d2c successfully opened
+INFO: append observation to file classdata/xarcos_test/2016091_w3oh.d2c
+I-CONVERT,  File is  [Native]
+I-OUTPUT,  classdata/xarcos_test/2016091_w3oh.d2c successfully opened
+INFO: append observation to file classdata/xarcos_test/2016091_w3oh.d2c
+
 ```
 
 We have invoked the discos2class command specifying the scan configuration (10 on 10 off 1 cal)
 and the input and output data directories, from the command output we can see
-which files have been created.
+which file have been created and succesively updated with all observations.
 
-In the destination directory a new directory is created. It is named exactly as the 
-source directory adding the **_class** suffix:
-
-```bash
-$ ls classdata/
-20160331-104808-7-15-w3oh_class
-```
-
-Inside the directory a new CLASS file is created for each **SECTION** 
-**POLARIZATION** and **SCAN NUMBER** combination foud in the original files:
+In the destination directory a new directory is created. It is named exactly as 
+specified in the command line option:
 
 ```bash
-$ ls classdata/20160331-104808-7-15-w3oh_class/
-20160331-104808_w3oh_SCAN2_SEC0_LCP.d2c  20160331-104808_w3oh_SCAN2_SEC1_RCP.d2c  20160331-104808_w3oh_SCAN2_SEC3_LCP.d2c
-20160331-104808_w3oh_SCAN2_SEC0_RCP.d2c  20160331-104808_w3oh_SCAN2_SEC2_LCP.d2c  20160331-104808_w3oh_SCAN2_SEC3_RCP.d2c
-20160331-104808_w3oh_SCAN2_SEC1_LCP.d2c  20160331-104808_w3oh_SCAN2_SEC2_RCP.d2c
+$ ls classdata/xarcos_test/
+2016091_w3oh.d2c
 ```
 
-Each file contains the integrated spectrum relative to the specified polarization for the specified backend section
-in that particular scan. These files can be directly opened with **CLASS** software. 
+Inside the directory a new CLASS file is created for each different source per 
+day found in the original files.
+
+Each file contains the result of the integration and calibration of all the observation
+data. Different sections and polarizations are treated as different line names
+in different observations listed in the file.
 
 You can now use CLASS software to inspect your data: 
 
 ```bash
-$ cd classdata/20160331-104808-7-15-w3oh_class $
+$ cd classdata/xarcos_test $
 $ class
 ...
-LAS> file in 20160331-104808_w3oh_SCAN2_SEC0_LCP.d2c
+LAS> file in 2016091_w3oh.d2c
 I-CONVERT,  File is  [Native]
-I-INPUT,  20160331-104808_w3oh_SCAN2_SEC0_LCP.d2c successfully opened
+I-INPUT,  2016091_w3oh.d2c successfully opened
 LAS> find /all
-I-FIND,  1 observation found
+I-FIND,  8 observations found
+LAS> list
+Current index contains:
+N;V Source       Line         Telescope      Lambda     Beta Sys  Sca Sub
+1;1 W3OH         SEC0-RCP     MEDICINA         +0.0     +0.0 Eq     2 1
+2;1 W3OH         SEC0-LCP     MEDICINA         +0.0     +0.0 Eq     2 1
+3;1 W3OH         SEC1-RCP     MEDICINA         +0.0     +0.0 Eq     2 1
+4;1 W3OH         SEC1-LCP     MEDICINA         +0.0     +0.0 Eq     2 1
+5;1 W3OH         SEC2-RCP     MEDICINA         +0.0     +0.0 Eq     2 1
+6;1 W3OH         SEC2-LCP     MEDICINA         +0.0     +0.0 Eq     2 1
+7;1 W3OH         SEC3-RCP     MEDICINA         +0.0     +0.0 Eq     2 1
+8;1 W3OH         SEC3-LCP     MEDICINA         +0.0     +0.0 Eq     2 1
 LAS> get 1
 I-GET,  Observation 1; Vers 1 Scan 2
-LAS> plot 
+LAS> plot
 ```
 ![Class screenshot](class_screenshot.png?raw=true "Class Screenshot")
 
