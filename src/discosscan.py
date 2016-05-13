@@ -277,7 +277,7 @@ class DiscosScanConverter(object):
                     logger.debug("on - off: %f" % ((on - off).mean(),))
                 else:
                     logger.debug("skip calibration")
-                    obs.head.gen.tsys = 0. # ANTENNA TEMP TABLE is unknown
+                    obs.head.gen.tsys = 1. # ANTENNA TEMP TABLE is unknown
                     obs.datay = (on - off) / off
                 obs.write()
                 self.file_class_out.close()
