@@ -25,7 +25,7 @@ import os
 
 setup(
       name = "discos2class",
-      version = "0.1.0-beta",
+      version = "0.2.0-beta",
       description = "convert discos fits to class format",
       author = "Marco Bartolini",
       author_email = "bartolini@ira.inaf.it",
