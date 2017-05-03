@@ -123,8 +123,16 @@ class DiscosScanConverter(object):
                                          format = "mjd",
                                          scale = "utc", 
                                          location = self.location)
-	    self.azimut=subscan["DATA TABLE"].data["az"][0]
-	    self.elevation=subscan["DATA TABLE"].data["el"][0]
+            self.azimut=subscan["DATA TABLE"].data["az"][0]
+            self.elevation=subscan["DATA TABLE"].data["el"][0]
+            weather_param=subscan["DATA TABLE"].data["weather"][0]
+            self.humidity=weather_param[0]  # relative umidity of the air
+            self.tamb=weather_param[1]      # air temperature in Celsius
+            self.pamb=weather_param[2]  #ambient pressure in millibar
+            
+            
+            
+	    
 	    
             self.record_time = Time(subscan[0].header["DATE"], scale="utc")
             self.antenna = subscan[0].header["ANTENNA"]
@@ -196,6 +204,8 @@ class DiscosScanConverter(object):
                 obs.head.presec[code.sec.gen] = True  # General
                 obs.head.presec[code.sec.pos] = True  # Position
                 obs.head.presec[code.sec.spe] = True  # Spectral observatins  Activate always spectral section to include the name of the line 
+                obs.head.presec[code.sec.cal] = True  # calibration observatins  Activate always spectral section to include the name of the line 
+
                 obs.head.gen.num = 0
                 obs.head.gen.ver = 0
                 obs.head.gen.teles = self.antenna
@@ -227,6 +237,11 @@ class DiscosScanConverter(object):
                 obs.head.pos.sl0p = 0. #FIXME: ?	
                 obs.head.pos.sb0p = 0. #FIXME: ?	
                 obs.head.pos.sk0p = 0. #FIXME: ?
+   
+                obs.head.cal.tamb=float(self.tamb+273.15) # must be in K 
+                obs.head.cal.pamb=float(self.pamb)
+                
+                logger.debug("Air temperature  %f Air pressure %f" %  (self.tamb+273.15, self.pamb))
 
                 obs.head.spe.restf = self.rest_frequency
                 obs.head.spe.nchan = self.bins
