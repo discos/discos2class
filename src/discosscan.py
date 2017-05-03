@@ -123,9 +123,9 @@ class DiscosScanConverter(object):
                                          format = "mjd",
                                          scale = "utc", 
                                          location = self.location)
-	    self.azimut=subscan["DATA TABLE"].data["az"][0]
-	    self.elevation=subscan["DATA TABLE"].data["el"][0]
-	    weather_param=subscan["DATA TABLE"].data["weather"][0]
+            self.azimut=subscan["DATA TABLE"].data["az"][0]
+            self.elevation=subscan["DATA TABLE"].data["el"][0]
+            weather_param=subscan["DATA TABLE"].data["weather"][0]
             self.humidity=weather_param[0]  # relative umidity of the air
             self.tamb=weather_param[1]      # air temperature in Celsius
             self.pamb=weather_param[2]  #ambient pressure in millibar
