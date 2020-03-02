@@ -142,12 +142,11 @@ class DiscosScanConverter(object):
             for sec in subscan["SECTION TABLE"].data:
                 if sec["id"] == section:
                     self.bins = sec["bins"]
+                    self.bandwidth = sec["bandwidth"]
             for rf in subscan["RF INPUTS"].data:
                 if((rf["polarization"] == polarization) and 
                    (rf["section"] == section)):
                     self.frequency = rf["frequency"]
-                    self.bandwidth = rf["bandwidth"]
-
                     self.LO = rf["localOscillator"]
                     try:
                         self.calibrationMark = rf["calibrationMark"]
