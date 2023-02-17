@@ -14,3 +14,6 @@ build
 jandata
 classconverter
 classdata
+src/__init__.py.bak
+src/discosscan.py.bak
+*.bak

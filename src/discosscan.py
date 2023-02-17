@@ -32,7 +32,7 @@ from astropy.constants import c as C
 import pyclassfiller
 from pyclassfiller import code
 
-from scancycle import ScanCycle
+from .scancycle import ScanCycle
 
 SUMMARY = "summary.fits"
 STOKES = "stokes"
@@ -70,7 +70,7 @@ class DiscosScanConverter(object):
                                                scale = "utc")
                                          ))
         #order file names by internal data timestamp
-        self.subscans.sort(key=lambda(x):x[2])
+        self.subscans.sort(key=lambda x:x[2])
         logger.debug("ordered files: %s" % (str([filename for filename,_,_ in
                                                   self.subscans]),))
         with fits.open(os.path.join(self.scan_path, SUMMARY)) as summary:
@@ -83,7 +83,7 @@ class DiscosScanConverter(object):
         else:
             try:
                 os.makedirs(self.dest_dir)
-            except Exception, e:
+            except Exception as e:
                 if not os.path.isdir(self.dest_dir):
                     logger.error("cannot create output dir: %s" % (self.dest_dir,))
                     sys.exit(1)
@@ -173,8 +173,8 @@ class DiscosScanConverter(object):
 
     def write_observation(self, scan_cycle, first_subscan_index):
         onoffcal = scan_cycle.onoffcal()
-        for sec_id, v in scan_cycle.data.iteritems():
-            for pol, data in v.iteritems():
+        for sec_id, v in scan_cycle.data.items():
+            for pol, data in v.items():
                 logger.debug("opened section %d pol %s" % (sec_id, pol))
                 self._load_metadata(sec_id, pol, first_subscan_index)
 
@@ -273,7 +273,7 @@ class DiscosScanConverter(object):
                                           self.rest_frequency) * CLIGHT
                 obs.head.spe.doppler = -  (v_observer + obs.head.spe.voff) / CLIGHT #doppler in units of c light
                                         #the negative sign is a class convention. 
-		logger.debug("Doppler  %f" %  obs.head.spe.doppler)
+                logger.debug("Doppler  %f" %  obs.head.spe.doppler)
                 obs.head.spe.line = "SEC%d-%s" % (sec_id, pol)
                 on, off, cal = onoffcal[sec_id][pol]
                 if((not self.skip_calibration) and 

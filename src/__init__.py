@@ -32,7 +32,7 @@ def parse_onoff_duty_cycle(duty_cycle):
     if not m:
         raise Exception("Invalid onoff sequence: %s" %(duty_cycle,))
     output_duty_cycle = {}
-    for k,v in m.groupdict().iteritems():
+    for k,v in m.groupdict().items():
         output_duty_cycle[k] = int(v)
     logging.debug("parsed duty cycle: %s" % (str(output_duty_cycle),))
     return output_duty_cycle
@@ -66,7 +66,7 @@ def cmd_line():
     #parsing command line arguments
     ns = parser.parse_args()
     if ns.show_version:
-        print "discos2class v%s" % (VERSION,)
+        print(("discos2class v%s" % (VERSION,)))
         sys.exit()
     #setting logger level and format
     if ns.debug:
@@ -77,16 +77,16 @@ def cmd_line():
     logger = logging.getLogger("discos2class")
     duty_cycle = parse_onoff_duty_cycle(ns.duty_cycle)
     logger.debug("Running with options:")
-    for k,v in vars(ns).iteritems():
+    for k,v in vars(ns).items():
         logger.debug("\t%s:\t%s" % (k, str(v),))
 
-    from discosscan import DiscosScanConverter
+    from .discosscan import DiscosScanConverter
 
     if not os.path.isdir(ns.output_dir):
         logging.debug("creating directory: %s" % (ns.output_dir,))
         try:
             os.makedirs(ns.output_dir)
-        except Exception, e:
+        except Exception as e:
             logging.warning("cannot create directory: %s" % (ns.output_dir,))
     for input_scan_directory in ns.source_dir:
         try:
@@ -95,7 +95,7 @@ def cmd_line():
             converter.load_subscans()
             converter.load_summary_info()
             converter.convert_subscans(ns.output_dir)
-        except Exception, e:
+        except Exception as e:
             if ns.debug:
                 raise
             else:

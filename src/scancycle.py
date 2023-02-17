@@ -19,7 +19,7 @@ class ScanCycle(object):
             self.data[section["id"]] = {}
             for pol in pols:
                 self.data[section["id"]][pol] = {}
-                for k,v in self.duty_cycle.iteritems():
+                for k,v in self.duty_cycle.items():
                     self.data[section["id"]][pol][k] = np.zeros(1, 
                                         dtype=[('spectrum',np.float32, (bins,)),
                                         ('samples', np.int),
@@ -27,7 +27,7 @@ class ScanCycle(object):
 
     @property
     def sections(self):
-        return self.data.keys()
+        return list(self.data.keys())
 
     def add_data(self, section_id, flag, pol, data, samples, integration):
         """
@@ -66,12 +66,12 @@ class ScanCycle(object):
 
     def onoffcal(self):
         result = dict()
-        for s_id,section in self.data.iteritems():
+        for s_id,section in self.data.items():
             result[s_id] = dict()
-            for pol_id, data in section.iteritems():
+            for pol_id, data in section.items():
                 on = data['on'][0]["spectrum"] / data["on"][0]["samples"]
                 off = data['off'][0]["spectrum"] / data["off"][0]["samples"]
-                if "cal" in data.keys():
+                if "cal" in list(data.keys()):
                     cal = data['cal'][0]["spectrum"] / data["cal"][0]["samples"]
                 else:
                     cal = None
