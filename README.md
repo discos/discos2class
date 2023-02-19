@@ -222,6 +222,11 @@ The command line tool can be installed via:
 $ python setup.py install
 ```
 
+Tested with Python 3.8
+
+
+
+
 
 
  
