@@ -21,7 +21,7 @@ import logging
 logger = logging.getLogger(__name__)
 from datetime import datetime
 import sys
-
+import glob
 import numpy as np 
 
 from astropy.io import fits
@@ -34,7 +34,9 @@ from pyclassfiller import code
 
 from .scancycle import ScanCycle
 
-SUMMARY = "summary.fits"
+
+#SUMMARY = "summary.fits"
+
 STOKES = "stokes"
 CLIGHT = C.to("km / s").value
 FILE_PREFIX = "class"
@@ -47,6 +49,7 @@ class DiscosScanException(Exception):
 
 class DiscosScanConverter(object):
     def __init__(self, path=None, duty_cycle={}, skip_calibration=False):
+        self.SUMMARY=glob.glob(path+'?um*.fits')
         self.scan_path = path
         self.got_summary = False
         self.file_class_out = pyclassfiller.ClassFileOut()
@@ -60,7 +63,13 @@ class DiscosScanConverter(object):
     def load_subscans(self):
         for subscan_file in os.listdir(self.scan_path):
             ext = os.path.splitext(subscan_file)[-1]
-            if not subscan_file == SUMMARY and ext == DATA_EXTENSION:
+            if subscan_file.lower().startswith('sum'):
+                self.SUMMARY=subscan_file
+                logger.debug("Summary File: %s" % self.SUMMARY)
+                
+
+        
+            if not subscan_file == self.SUMMARY and ext == DATA_EXTENSION:
                 subscan_path = os.path.join(self.scan_path, subscan_file)
                 with fits.open(subscan_path) as subscan:
                     self.subscans.append((subscan_path, 
@@ -73,7 +82,7 @@ class DiscosScanConverter(object):
         self.subscans.sort(key=lambda x:x[2])
         logger.debug("ordered files: %s" % (str([filename for filename,_,_ in
                                                   self.subscans]),))
-        with fits.open(os.path.join(self.scan_path, SUMMARY)) as summary:
+        with fits.open(os.path.join(self.scan_path, self.SUMMARY)) as summary:
             self.summary = summary[0].header
 
     def convert_subscans(self, dest_dir=None):
@@ -87,10 +96,10 @@ class DiscosScanConverter(object):
                 if not os.path.isdir(self.dest_dir):
                     logger.error("cannot create output dir: %s" % (self.dest_dir,))
                     sys.exit(1)
-        for i in range(len(self.subscans) / self.duty_cycle_size):
+        for i in range(int(len(self.subscans) / self.duty_cycle_size)):
             self.n_cycles += 1
             scan_cycle = self.convert_cycle(i * self.duty_cycle_size)
-            self.write_observation(scan_cycle, i * self.duty_cycle_size)
+            self.write_observation(scan_cycle, i * self.duty_cycle_size) 
 
     def convert_cycle(self, index):
         current_index = index
@@ -278,7 +287,7 @@ class DiscosScanConverter(object):
                 on, off, cal = onoffcal[sec_id][pol]
                 if((not self.skip_calibration) and 
                    (cal is not None)):
-                    start_bin = self.bins / 3
+                    start_bin = int(self.bins / 3)
                     stop_bin = 2 * start_bin
                     cal_mean = cal[start_bin:stop_bin].mean()
                     off_mean = off[start_bin:stop_bin].mean()
@@ -298,10 +307,10 @@ class DiscosScanConverter(object):
     def load_summary_info(self, summary_file_path=None):
         if not summary_file_path:
             dir_name = self.scan_path
-        summary_file_path = os.path.join(dir_name, SUMMARY)
+        summary_file_path = os.path.join(dir_name, self.SUMMARY)
         if not os.path.exists(summary_file_path):
             raise DiscosScanException("scan %s does not conatain a %s" % (dir_name,
-                                                                          SUMMARY))
+                                                                          self.SUMMARY))
         with fits.open(summary_file_path) as summary_file:
             logger.debug("loading summary from %s" % (summary_file_path,))
             summary_header = summary_file[0].header
