@@ -18,7 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-VERSION = "0.3.0-beta"
+VERSION = "0.3.1-beta"
 
 import logging
 import re
