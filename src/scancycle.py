@@ -22,7 +22,7 @@ class ScanCycle(object):
                 for k,v in self.duty_cycle.items():
                     self.data[section["id"]][pol][k] = np.zeros(1, 
                                         dtype=[('spectrum',np.float32, (bins,)),
-                                        ('samples', np.int),
+                                        ('samples', np.int_),
                                         ('integration', np.float64)])
 
     @property

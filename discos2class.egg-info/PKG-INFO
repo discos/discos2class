@@ -1,0 +1,10 @@
+Metadata-Version: 2.1
+Name: discos2class
+Version: 0.3.0b0
+Summary: convert discos fits to class format
+Home-page: http://github.com/discos/discos2class/
+Author: Marco Bartolini
+Author-email: bartolini@ira.inaf.it
+License: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+License-File: LICENSE
+License-File: COPYING
