@@ -11,7 +11,7 @@ class ScanCycle(object):
         self.cycle_length = sum(duty_cycle.values())
         self.data = {}
         for section in sections:
-            if section["type"] == "simple":
+            if section["type"] == "simple" or section["type"] == "spectra":
                 pols = ["simple"]
             else:
                 pols = POLARIZATIONS
@@ -49,14 +49,17 @@ class ScanCycle(object):
 
     def add_section_data(self, section, flag, integration, data):
         if section["type"] == "stokes":
+            print("Sezione:",section["type"])
             pols = POLARIZATIONS
         else:
+            print("Sezione:",section["type"])
+
             pols = ["simple"]
         total_integration = len(data) * integration
         data_sum = data.sum(0)
         for i,pol in enumerate(pols):
             data_start = i * section["bins"]
-            data_stop = data_start + section["bins"]
+            data_stop = data_start +section["bins"]
             self.add_data(section["id"],
                           flag,
                           pol,
