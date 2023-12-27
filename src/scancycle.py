@@ -10,17 +10,42 @@ class ScanCycle(object):
         self.duty_cycle = duty_cycle
         self.cycle_length = sum(duty_cycle.values())
         self.data = {}
+        
         for section in sections:
+            '''
             if section["type"] == "simple" or section["type"] == "spectra":
-                pols = ["simple"]
+                pols = "simple"
+                bins = section["bins"]
+                print ('sec id', type(section['id']))
+
+                self.data[section["id"]]['simple'] = {}
+                
+                for k,v in self.duty_cycle.items():
+                    print('k',k)
+                    print('section',section["id"])
+                    self.data[section["id"]][pols][k] = np.zeros(1, 
+                                        dtype=[('spectrum',np.float32, (bins,)),
+                                        ('samples', np.int_),
+                                        ('integration', np.float64)])
+
+            else:
+            ''' 
+            if section["type"] == "simple" or section["type"] == "spectra":
+                pols= ['simple',]
             else:
                 pols = POLARIZATIONS
             bins = section["bins"]
             self.data[section["id"]] = {}
+
             for pol in pols:
-                self.data[section["id"]][pol] = {}
-                for k,v in self.duty_cycle.items():
-                    self.data[section["id"]][pol][k] = np.zeros(1, 
+                    print ('sec id', type(pol))
+
+                    self.data[section["id"]][pol] = {}
+                    for k,v in self.duty_cycle.items():
+                        print('k',k)
+                        print('section',section["id"])
+ 
+                        self.data[section["id"]][pol][k] = np.zeros(1, 
                                         dtype=[('spectrum',np.float32, (bins,)),
                                         ('samples', np.int_),
                                         ('integration', np.float64)])
@@ -33,7 +58,7 @@ class ScanCycle(object):
         """
         @param data: a single spectrum file containing all polarizations
         """
-        self.data[section_id][pol][flag]["spectrum"] += data
+        self.data[section_id][pol][flag]["spectrum"] +=  data
         self.data[section_id][pol][flag]["samples"] += samples
         self.data[section_id][pol][flag]["integration"] += integration
 
@@ -48,25 +73,41 @@ class ScanCycle(object):
                                   )
 
     def add_section_data(self, section, flag, integration, data):
+        print ("forma:",data.shape)
+
         if section["type"] == "stokes":
             print("Sezione:",section["type"])
             pols = POLARIZATIONS
+            total_integration = len(data) * integration
+            data_sum = data.sum(0)
+            for i,pol in enumerate(pols):
+                data_start = i * section["bins"]
+                data_stop = data_start +section["bins"]
+                print("forma data sum",data_sum.shape)
+                self.add_data(section["id"],
+                          flag,
+                          pol,
+                          data_sum[data_start:data_stop],
+                          len(data),
+                          total_integration)
         else:
             print("Sezione:",section["type"])
+            total_integration = len(data) * integration
 
-            pols = ["simple"]
-        total_integration = len(data) * integration
-        data_sum = data.sum(0)
-        for i,pol in enumerate(pols):
-            data_start = i * section["bins"]
-            data_stop = data_start +section["bins"]
+            pol = "simple"
+            data_start = 0 
+            data_stop = section["bins"]
+            data_sum = data.sum(0)
+            print (type(data_sum))
+            print("forma data sum",data_sum.shape)
+
             self.add_data(section["id"],
                           flag,
                           pol,
                           data_sum[data_start:data_stop],
                           len(data),
                           total_integration)
-
+ 
     def onoffcal(self):
         result = dict()
         for s_id,section in self.data.items():
