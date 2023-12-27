@@ -19,4 +19,5 @@ src/discosscan.py.bak
 *.bak
 dist/
 build/
+discos2class.egg-info/
 
