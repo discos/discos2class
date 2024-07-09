@@ -23,12 +23,25 @@ VERSION = "0.3.1-beta"
 import logging
 import re
 
+# case POSITION SWITCHING
 valid_onoff_duty_cycle = re.compile("(?P<on>\d+):(?P<off>\d+):(?P<cal>\d+)",
                                  flags = re.I)
-
+# case NODDING                                 
+valid_onoff_duty_cycle_nd = re.compile("(?P<sig>\d+):(?P<on>\d+):(?P<off>\d+):(?P<cal>\d+)",
+                                 flags = re.I)
+# duty_cycle_type = 2 # An integer representing how many ':' are found in the ns.duty_cycle string. If 2 -> PS, if 3 -> ND
 
 def parse_onoff_duty_cycle(duty_cycle):
-    m = valid_onoff_duty_cycle.match(duty_cycle)
+
+    # Check the number of ':' inside the duty_cycle string
+    if duty_cycle.count(':') == 2:
+        m = valid_onoff_duty_cycle.match(duty_cycle) # case PS
+        logging.debug("Position Switching mode selected!")
+    else: 
+        m = valid_onoff_duty_cycle_nd.match(duty_cycle) # case ND
+        logging.debug("Nodding mode selected!")
+    
+    # m = valid_onoff_duty_cycle.match(duty_cycle)
     if not m:
         raise Exception("Invalid onoff sequence: %s" %(duty_cycle,))
     output_duty_cycle = {}
@@ -90,6 +103,7 @@ def cmd_line():
             logging.warning("cannot create directory: %s" % (ns.output_dir,))
     for input_scan_directory in ns.source_dir:
         try:
+
             converter = DiscosScanConverter(input_scan_directory, duty_cycle,
                                             ns.skip_calibration)
             converter.load_subscans()

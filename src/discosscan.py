@@ -16,6 +16,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from ctypes import LibraryLoader
 import os
 import logging
 logger = logging.getLogger(__name__)
@@ -40,7 +41,8 @@ from .scancycle import ScanCycle
 STOKES = "stokes"
 CLIGHT = C.to("km / s").value
 FILE_PREFIX = "class"
-FILE_EXTENSION = ".d2c"
+# FILE_EXTENSION = ".d2c" # OLD
+FILE_EXTENSION = ".gdf" # OLD
 DATA_EXTENSION = ".fits"
 
 class DiscosScanException(Exception):
@@ -59,8 +61,25 @@ class DiscosScanConverter(object):
         self.n_cycles = 0
         self.integration = 0
         self.skip_calibration = skip_calibration
+        
+        self.feeds = []
+        self.type = ""
+        self.section_current_val = "" # trick for Sardara Nodding
+
+        self.backend_name = "" # i.e. [sar] "sardara" or [ska] "skarab". The value will be used to discriminate the type of data processing according to the backend 
+
+    def skarab_duty_cycle(self):
+       
+            self.duty_cycle['sig'] = self.duty_cycle['sig'] * 2
+            self.duty_cycle['on'] = self.duty_cycle['on'] * 2
+            self.duty_cycle['off'] = self.duty_cycle['off'] * 2
+            self.duty_cycle['cal'] = self.duty_cycle['cal'] * 2
+            # update duty_cycle size:
+            self.duty_cycle_size = sum(self.duty_cycle.values())
+
 
     def load_subscans(self):
+
         for subscan_file in os.listdir(self.scan_path):
             ext = os.path.splitext(subscan_file)[-1]
             if subscan_file.lower().startswith('sum'):
@@ -78,14 +97,29 @@ class DiscosScanConverter(object):
                                                format = "mjd",
                                                scale = "utc")
                                          ))
+        
         #order file names by internal data timestamp
         self.subscans.sort(key=lambda x:x[2])
+        #self.subscans.sort(key=lambda x: (x[2], x[0]))
         logger.debug("ordered files: %s" % (str([filename for filename,_,_ in
-                                                  self.subscans]),))
+                                                self.subscans]),))
         with fits.open(os.path.join(self.scan_path, self.SUMMARY)) as summary:
             self.summary = summary[0].header
-
+      
+       
     def convert_subscans(self, dest_dir=None):
+        
+        #print('***', len(self.subscans))
+        #print('***', self.subscans[0][0]) # from "load_subscans" first index is the item number in the list, second index the value [0]=file name, [1] signal flag, [2]=time
+        #print('***', self.duty_cycle_size)
+        #print('***', len(self.subscans) / self.duty_cycle_size)
+
+        # In case of Nodding and usage of the skarab backend, we need to double the numbers of the duty cycle
+        # This because feeds data are recorded in separate files (i.e. 6 'on' -> 12 'on' (for the second feed flag is however opposite)) 
+        # if backend is skarab (i.e. data not merged) and the mode is Nodding (4 keys values in the dictionary self.duty_cycle)
+        if((len(self.duty_cycle.keys()) == 4) and (self.backend_name == 'ska')):
+            self.skarab_duty_cycle()
+
         self.dest_dir = dest_dir
         if not self.dest_dir:
             self.dest_dir = self.scan_path
@@ -96,16 +130,41 @@ class DiscosScanConverter(object):
                 if not os.path.isdir(self.dest_dir):
                     logger.error("cannot create output dir: %s" % (self.dest_dir,))
                     sys.exit(1)
-        for i in range(int(len(self.subscans) / self.duty_cycle_size)):
+
+        for i in range(int(len(self.subscans) / self.duty_cycle_size)): 
             self.n_cycles += 1
             scan_cycle = self.convert_cycle(i * self.duty_cycle_size)
             self.write_observation(scan_cycle, i * self.duty_cycle_size) 
 
     def convert_cycle(self, index):
         current_index = index
+
         with fits.open(self.subscans[index][0]) as first_subscan:
             scan_cycle = ScanCycle(first_subscan["SECTION TABLE"].data, 
                                    self.duty_cycle)
+
+            # Extract the feed information
+            used_feeds = first_subscan["RF INPUTS"].data["feed"]
+            self.feeds = used_feeds # For "spectra" type and Nodding mode, self.feeds will look like {0,0,6,6} for LCP and RCP
+            # print("Feeds", self.feeds)
+
+            # Extraxt whether the observation is "spectra" or "stokes" type
+            # self.type = first_subscan["SECTION TABLE"].data["type"][0] # get the first element of the array
+            #print("type", self.type)
+
+        # The duty_cycle is a dictionary in this class
+        # We need to count the number of keys of the dictionary
+        # 3 keys -> Position Switching
+        # 4 keys -> Nodding
+        len(self.duty_cycle.keys())
+        logger.debug("Number of Duty Cycle keys (from function 'convert_cycle') %d" % (len(self.duty_cycle.keys())))
+
+        if(len(self.duty_cycle.keys()) == 4): # we add an additional key for the REFSIG nodding case
+            for i in range(self.duty_cycle['sig']):
+                with fits.open(self.subscans[current_index][0]) as spec:
+                    scan_cycle.add_data_file(spec, "sig")
+                current_index += 1
+       
         for i in range(self.duty_cycle['on']):
             with fits.open(self.subscans[current_index][0]) as spec:
                 scan_cycle.add_data_file(spec, "on")
@@ -139,15 +198,26 @@ class DiscosScanConverter(object):
             self.tamb=weather_param[1]      # air temperature in Celsius
             self.pamb=weather_param[2]  #ambient pressure in millibar
             
-            
-            
-	    
+            # get the receiver
+            self.receiver = subscan[0].header["Receiver Code"][:1]
+            # get the backend name from the ScheduleName keyword
+            # self.backend = subscan[0].header["ScheduleName"].split('_')[1] # gets the name between the first two "_"
 	    
             self.record_time = Time(subscan[0].header["DATE"], scale="utc")
             self.antenna = subscan[0].header["ANTENNA"]
             self.ScanID = subscan[0].header["SCANID"]
             self.SubScanID = subscan[0].header["SubScanID"]
             self.source_name = subscan[0].header["SOURCE"]
+
+            # While using data in SARDARA format, each two sections are merged together
+            # This creates a data structure like 0,2,4 .... 
+            # THerefore some values are missing which are need to read out values in the RF table
+            #print('****** section *****', section)
+            #print(section == self.section_current_val)
+            if(section == self.section_current_val): # section_current_val is a auxiliary variable. Its value is updated at the end of the function
+                section = section + 1 # trick to change and add the missing section numbers when using SARDARA data format
+                #print('****** new section value *****', section)
+
             for sec in subscan["SECTION TABLE"].data:
                 if sec["id"] == section:
                     self.bins = sec["bins"]
@@ -155,8 +225,10 @@ class DiscosScanConverter(object):
             for rf in subscan["RF INPUTS"].data:
                 if((rf["polarization"] == polarization) and 
                    (rf["section"] == section)):
+
                     self.frequency = rf["frequency"]
                     self.LO = rf["localOscillator"]
+
                     try:
                         self.calibrationMark = rf["calibrationMark"]
                     except:
@@ -180,16 +252,33 @@ class DiscosScanConverter(object):
                 self.central_channel = (nchan / 2) + 1
                 self.offsetFrequencyAt0 = 0
 
+            # Update section_current_value
+            self.section_current_val = section
+
     def write_observation(self, scan_cycle, first_subscan_index):
+
+        # According to the mode (i.e. Position Switching or Nodding) create the specific output filename
+        mode = "" # Position Switching = "_psw"; Nodding = "_nod"
+        if(len(self.duty_cycle.keys())) == 3: # CASE: Position Switching
+            mode = "_psw"
+        else:
+            mode = "_nod"
+
         onoffcal = scan_cycle.onoffcal()
         for sec_id, v in scan_cycle.data.items():
+
             for pol, data in v.items():
                 logger.debug("opened section %d pol %s" % (sec_id, pol))
                 self._load_metadata(sec_id, pol, first_subscan_index)
 
                 outputfilename = self.observation_time.datetime.strftime("%Y%j") + \
-                                 "_" + self.source_name +\
-                                 FILE_EXTENSION
+                    "_" + self.source_name + mode + FILE_EXTENSION
+
+                #outputfilename = self.observation_time.datetime.strftime("%Y%m%d-%H%M%S") + \
+                #                 "_" + self.source_name +\
+                #                 mode + FILE_EXTENSION
+
+
                 output_file_path = os.path.join(self.dest_dir, outputfilename)
                 try: 
                     logger.debug("try to open file %s" % (output_file_path,))
@@ -207,7 +296,10 @@ class DiscosScanConverter(object):
                                              single = False)
                     logger.info("open new file %s" % (output_file_path,))
 
-                obs = pyclassfiller.ClassObservation()
+                # on, off, cal = onoffcal[sec_id][pol]
+                
+                obs = pyclassfiller.ClassObservation() 
+                
                 obs.head.presec[:]            = False  # Disable all sections except...
                 obs.head.presec[code.sec.gen] = True  # General
                 obs.head.presec[code.sec.pos] = True  # Position
@@ -216,7 +308,8 @@ class DiscosScanConverter(object):
 
                 obs.head.gen.num = 0
                 obs.head.gen.ver = 0
-                obs.head.gen.teles = self.antenna
+                # obs.head.gen.teles = self.antenna + " " + "Feed [" + str(self.feeds[sec_id]) + "]" old
+                obs.head.gen.teles = self.antenna + "-" + str(self.receiver) + "-" + self.summary['backendname'] + "-" + self.get_pol_type_string_converted(pol)
                 obs.head.gen.dobs = int(self.observation_time.mjd) - 60549
                 obs.head.gen.dred = int(self.record_time.mjd) - 60549
                 obs.head.gen.typec = code.coord.equ
@@ -283,26 +376,77 @@ class DiscosScanConverter(object):
                 obs.head.spe.doppler = -  (v_observer + obs.head.spe.voff) / CLIGHT #doppler in units of c light
                                         #the negative sign is a class convention. 
                 logger.debug("Doppler  %f" %  obs.head.spe.doppler)
-                obs.head.spe.line = "SEC%d-%s" % (sec_id, pol)
-                on, off, cal = onoffcal[sec_id][pol]
+                # get the pol type string converted
+                pol_converted = self.get_pol_type_string_converted(pol)
+                #obs.head.spe.line = "SEC%d-%s" % (sec_id, pol_converted) # old
+                #obs.head.spe.line = "F%s-%s" % (str(self.feeds[sec_id]), str(self.bandwidth)) + " " + str(sec_id)
+                obs.head.spe.line = "F%s-%s" % (str(self.feeds[sec_id]), str(self.bandwidth))
+                
+                # Check if data are relative to type=spectra 
+                # If so check the number of feeds used: if n > 1 then nodding mode is applied
+                # Then for the second feed, on and off values must be treated as REFERENCE and SIGNAL respectively 
+
+                # Check the number of self.duty_cycle.keys()
+                # If n = 3 -> Position Switching
+                # If n = 4 -> Nodding
+
+                if(len(self.duty_cycle.keys())) == 3:
+                    on, off, cal = onoffcal[sec_id][pol]
+                else:
+                    sig, on, off, cal = onoffcal[sec_id][pol]
+               
                 if((not self.skip_calibration) and 
                    (cal is not None)):
                     start_bin = int(self.bins / 3)
                     stop_bin = 2 * start_bin
+
+                    if(len(self.duty_cycle.keys())) == 4: # compute sig_mean for the nodding case
+                        sig_mean = sig[start_bin:stop_bin].mean()
                     cal_mean = cal[start_bin:stop_bin].mean()
                     off_mean = off[start_bin:stop_bin].mean()
-                    counts2kelvin = self.calibrationMark / (cal_mean - off_mean)
+
+                    # Note for the Nodding mode
+                    # counts2kelvin value is calculated differently according to the feed (if Nodding mode is used)
+                    # For nodding case:
+                    # Sections 0 and 1 are relative to the central feed while sections 2 and 3 for the second feed (whatever it is)
+                    # Therefore we will use sig_mean or cal_mean values respectively for the Sections (0 and 1) and (2 and 3) 
+
+                    # Get the "counts2kelvin" according to the mode (i.e. Position Switching and Nodding)
+                    # CASE: Position Switching
+                    if(len(self.duty_cycle.keys())) == 3: 
+                        counts2kelvin = self.calibrationMark / (cal_mean - off_mean)
+                    
+                    # CASE: Position Switching
+                    if(len(self.duty_cycle.keys())) == 4: 
+                        if(sec_id == 0):
+                            # counts2kelvin = self.calibrationMark / (sig_mean - off_mean)    
+                            counts2kelvin = self.calibrationMark / (cal_mean - off_mean)    
+                        else:
+                            # counts2kelvin = self.calibrationMark / (cal_mean - off_mean)
+                            counts2kelvin = self.calibrationMark / (sig_mean - off_mean)
+                    
+                    logger.debug("section_id: %f" % sec_id)
+                    logger.debug("pol: %s" % pol,)
+                    if(len(self.duty_cycle.keys())) == 4:
+                        logger.debug("sig_mean: %f" % sig_mean)
+                    logger.debug("cal_mean: %f" % cal_mean)
+                    logger.debug("off_mean: %f" % off_mean,)
+                    logger.debug("calibrationMark: %f" % self.calibrationMark)
                     logger.debug("c2k: %f" % (counts2kelvin,))
                     tsys = counts2kelvin * off_mean
                     obs.head.gen.tsys = tsys
                     logger.debug("tsys: %f" % (tsys,))
+
                     obs.datay = ((on - off) / off ) * tsys
+                
                 else:
                     logger.debug("skip calibration")
                     obs.head.gen.tsys = 1. # ANTENNA TEMP TABLE is unknown
-                    obs.datay = (on - off) / off
+                    
+                    obs.datay = ((on - off) / off )
+                
                 obs.write()
-                self.file_class_out.close()
+                self.file_class_out.close() 
 
     def load_summary_info(self, summary_file_path=None):
         if not summary_file_path:
@@ -324,8 +468,34 @@ class DiscosScanConverter(object):
             velocity = dict(vrad = summary_header["VRAD"],
                             vdef = summary_header["VDEF"],
                             vframe = summary_header["VFRAME"])
+
+            # get backend info name in the summary dict
+            # self.backend = summary_header["BackendName"]
+            # self.backend_name = summary_header["BackendName"][:3]
+            # Alternative way
+            # If the file name contains the substr "FEED_" then the backend is "skarab", otherwise "sardara"
+            if("FEED_" in str(self.subscans[0][0])): # from "load_subscans" first index is the item number in the list, second index the value [0]=file name, [1] signal flag, [2]=time
+                self.backend_name = "ska"
+            else:
+                self.backend_name = "sar"
+
+
+
         self.summary = (dict(rest_frequency = rest_frequency,
-                             velocity = velocity))
+                             velocity = velocity,
+                             backendname = summary_header["BackendName"][:3]))
         self.got_summary = True
 
+    def get_pol_type_string_converted(self, pol):
 
+        pol_type_converted = ""
+        if(pol == "LCP"):
+            pol_type_converted = "LL"
+        if(pol == "RCP"):
+            pol_type_converted = "RR"
+        if(pol == "Q"):
+            pol_type_converted = "LR"
+        if(pol == "U"):
+            pol_type_converted = "RL"
+
+        return pol_type_converted
