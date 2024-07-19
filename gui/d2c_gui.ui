@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>847</width>
+    <width>1054</width>
     <height>443</height>
    </rect>
   </property>
@@ -37,7 +37,7 @@
      <rect>
       <x>20</x>
       <y>20</y>
-      <width>802</width>
+      <width>951</width>
       <height>371</height>
      </rect>
     </property>
@@ -49,9 +49,6 @@
       <layout class="QHBoxLayout" name="horizontalLayout_1" stretch="1,2">
        <property name="spacing">
         <number>10</number>
-       </property>
-       <property name="sizeConstraint">
-        <enum>QLayout::SetDefaultConstraint</enum>
        </property>
        <item>
         <layout class="QGridLayout" name="gridLayout" columnstretch="1,0">
@@ -1074,13 +1071,13 @@ QListView{
          </property>
          <property name="minimumSize">
           <size>
-           <width>400</width>
+           <width>600</width>
            <height>0</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>400</width>
+           <width>500</width>
            <height>16777215</height>
           </size>
          </property>
@@ -1097,14 +1094,14 @@ QListView{
      <item alignment="Qt::AlignHCenter">
       <widget class="Line" name="line">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
        <property name="minimumSize">
         <size>
-         <width>756</width>
+         <width>940</width>
          <height>0</height>
         </size>
        </property>
@@ -1125,7 +1122,7 @@ QListView{
         <number>10</number>
        </property>
        <property name="leftMargin">
-        <number>480</number>
+        <number>690</number>
        </property>
        <item>
         <widget class="QPushButton" name="verify_btn">
@@ -1251,7 +1248,7 @@ QListView{
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>847</width>
+     <width>1054</width>
      <height>25</height>
     </rect>
    </property>
