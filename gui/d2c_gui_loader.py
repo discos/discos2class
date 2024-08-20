@@ -26,6 +26,8 @@ class MainUI(QMainWindow):
     updateText = pyqtSignal(str)   # Required to update the QplainTextArea widget during the gui thread
     updateChrText = pyqtSignal(object)
 
+    duty_cycle_size = 0
+
     def __init__(self):
         super(MainUI, self).__init__()
 
@@ -40,9 +42,9 @@ class MainUI(QMainWindow):
         self.color_format_hld.setForeground(self.color_hld)
         self.color_format_hld.setFontWeight(QFont.Bold)
 
-        self.color_err = QColor(25, 160, 194, 255) # R,G,B,Opacity for error format 
-        self.color_format_hld.setForeground(self.color_err)
-        self.color_format_hld.setFontWeight(QFont.Bold)
+        self.color_err = QColor(255, 0, 0, 255) # R,G,B,Opacity for error format 
+        self.color_format_err.setForeground(self.color_err)
+        self.color_format_err.setFontWeight(QFont.Bold)
 
         # Set hld format for the QplainTextArea widget
         self.info_panel_ta.setCurrentCharFormat(self.color_format_hld)
@@ -68,6 +70,12 @@ class MainUI(QMainWindow):
         self.duty_cycle_cmb1.addItems(DUTY_CYCLE_VALUES)
         self.duty_cycle_cmb2.addItems(DUTY_CYCLE_VALUES)
         self.duty_cycle_cmb3.addItems(DUTY_CYCLE_VALUES)
+
+        #  adding action to combo box duty cycle values 
+        self.duty_cycle_cmb0.activated.connect(self.get_duty_cycle_size)
+        self.duty_cycle_cmb1.activated.connect(self.get_duty_cycle_size)
+        self.duty_cycle_cmb2.activated.connect(self.get_duty_cycle_size)
+        self.duty_cycle_cmb3.activated.connect(self.get_duty_cycle_size)
 
         # adding mode-type list to the relative combo box
         self.mode_cmb.addItems(MODE_TYPE)
@@ -109,7 +117,15 @@ class MainUI(QMainWindow):
         if(self.mode_cmb.currentText() == 'Nodding'):
             self.duty_cycle_cmb0.setDisabled(value)
         self.calibration_cb.setDisabled(value)
-        self.mode_cmb.setDisabled(value)                       
+        self.mode_cmb.setDisabled(value)
+
+    def get_duty_cycle_size(self):
+
+        self.duty_cycle_size = int(self.duty_cycle_cmb0.currentText()) + int(self.duty_cycle_cmb1.currentText()) + int(self.duty_cycle_cmb2.currentText()) + int(self.duty_cycle_cmb3.currentText())
+
+        self.enable_verify_btn()
+       
+
         
     def switch_duty_cycles(self):
         # Activete or deactivare the first duty_cycle_cb according to the mode selected (PS:3, ND:4)
@@ -131,6 +147,12 @@ class MainUI(QMainWindow):
             self.info_panel_ta.appendPlainText(self.source_folder)
             self.info_panel_ta.appendPlainText('')
             self.enable_verify_btn()
+        else:
+            self.info_panel_ta.setCurrentCharFormat(self.color_format_hld) 
+            self.info_panel_ta.appendPlainText('SELECTED SOURCE FOLDER:')
+            self.info_panel_ta.setCurrentCharFormat(self.color_format_std) 
+            self.info_panel_ta.appendPlainText('Not specified')
+            self.info_panel_ta.appendPlainText('')
 
     def select_destination_folder(self):
         
@@ -144,6 +166,12 @@ class MainUI(QMainWindow):
             self.info_panel_ta.appendPlainText(self.destination_folder)
             self.info_panel_ta.appendPlainText('')
             self.enable_verify_btn()
+        else:
+            self.info_panel_ta.setCurrentCharFormat(self.color_format_hld) 
+            self.info_panel_ta.appendPlainText('SELECTED DESTINATION FOLDER:')
+            self.info_panel_ta.setCurrentCharFormat(self.color_format_std) 
+            self.info_panel_ta.appendPlainText('Not specified')
+            self.info_panel_ta.appendPlainText('') 
 
     def disable_convert_btn(self):
 
@@ -205,15 +233,18 @@ class MainUI(QMainWindow):
 
         self.check_fits_files_duty_cycle()
 
-        file_error, nduty_cycle_err  = self.check_fits_files_duty_cycle()
+        file_error, nduty_cycle_err, nfile  = self.check_fits_files_duty_cycle()
         if not file_error:
 
             self.enable_convert_btn()
             
         else:
             # update QtextArea
-            self.updateText.emit('Duty-Cycle ERROR #' + str(nduty_cycle_err))
-
+            self.info_panel_ta.setCurrentCharFormat(self.color_format_err) 
+            self.updateText.emit('Duty-Cycle ERROR #' + str(nduty_cycle_err) + ', File #' + str(nfile))
+            self.info_panel_ta.setCurrentCharFormat(self.color_format_std) 
+            self.info_panel_ta.appendPlainText('') 
+          
 
     def check_fits_files_duty_cycle(self):
 
@@ -247,7 +278,7 @@ class MainUI(QMainWindow):
                 
             duty_cycle_flags.append('REFCAL')
 
-        # Get useful information relative to each scan
+        # Get useful information relative to each scan contained in the selected source folder
         for subscan_file in os.listdir(self.source_folder):
 
             ext = os.path.splitext(subscan_file)[-1]
@@ -288,16 +319,16 @@ class MainUI(QMainWindow):
                 j = 0
                 d = d + 1
             
-        return error, d
+        return error, d, i
           
     def enable_convert_btn(self):
-        if( (self.source_folder != "") and (self.destination_folder != "") ):
+        if( (self.source_folder != "") and (self.destination_folder != "") and (self.duty_cycle_size != 0)):
             self.convert_btn.setDisabled(False)   
         else:
             self.convert_btn.setDisabled(True)
 
     def enable_verify_btn(self):
-        if( (self.source_folder != "") and (self.destination_folder != "") ):
+        if( (self.source_folder != "") and (self.destination_folder != "") and (self.duty_cycle_size != 0)):
             self.verify_btn.setDisabled(False)   
         else:
             self.verify_btn.setDisabled(True)
