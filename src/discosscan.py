@@ -97,10 +97,59 @@ class DiscosScanConverter(object):
                                                format = "mjd",
                                                scale = "utc")
                                          ))
-        
-        #order file names by internal data timestamp
-        self.subscans.sort(key=lambda x:x[2])
+
+        # Before sorting the subscans in time, the backend name must be retrieved
+        # Backend name can be retrieved in two ways: [A] from the summary dict or [B] from the file name
+        # [A] self.backend = summary_header["BackendName"] or self.backend_name = summary_header["BackendName"][:3]
+        # [B] If the file name contains the substr "FEED_" then the backend is "skarab", otherwise "sardara"
+        if("FEED_" in str(self.subscans[0][0])): # from "load_subscans" first index is the item number in the list, second index the value [0]=file name, [1] signal flag, [2]=time
+            self.backend_name = "ska"
+        else:
+            self.backend_name = "sar"
+        # for skarab case (nodding mode) we need to sort files into blocks
+        # so that first duty cycle is for feed 0, second for feed 6 third for 0 and so on
+        # If the list of filenames alternates between the of two feeds then it is a mess!
+        # Before we should know how skarab writes data:
+        # it writes a duty cycle for each feed orr writes file alternating the feed?
+        # And what are the keys assigned for the second feed? 
+        # for sardara we have to invert the sign of the key since sections of two feeds are merged together in one file fits
+        # Operatively: we need to take "self.subscans.sort(key=lambda x:x[2])" remove files 1,3,5 ... till end length duty_cycle
+        # then add the removed filenames after half of the same duty_cycle
+
+        # Apply special sorting for the Skarab case
+        # Scan files will be like f0-f6-f0-f6-f0........
+        # It has to be created a duty-cycle block for each individual feed like |f0-f0-f0.....||f6-f6-f6.....||f0-f0-f0.....|......
+        # Each block (case Nodding) contains the sequence of REFSIG, SIGNAL, REFERENCE, REFCAL
+        # It is like to generate an alternate Position Switching mode becase each next block has a different feed value
+        if(self.backend_name == "ska" and len(self.duty_cycle.keys()) == 4):
+            logger.debug("Skarab backend detected. Applying special sorting on scan files...")
+            # subscans should be sorted rather by internal time stamp as correct recording time (can differ from the disk rec time)
+            # check this out once testing with real skarab data -> self.subscans.sort(key=lambda x:x[2])
+            self.subscans.sort()
+            #for i in range(len(self.subscans)):
+            #    print(self.subscans[i][0])
+            tmp_list = []
+            # The Skarab duty_cycle_size is double than the Sardara one since feeds files are recorded independently 
+            duty_cycle_size_sk = self.duty_cycle_size*2 # case Nodding [1:6:6:1]=14 *2 feeds
+            cycles = int(len(self.subscans)/duty_cycle_size_sk)
+
+            tmp_list = self.subscans[1::2] # extracts and copy all items with odd indexes
+            del self.subscans[1::2] # del all items with odd indexes from the original list
+
+            # Create blocks in the original list by adding all even items in the original list
+            for i in range(0, cycles):
+                for j in range(int(i*duty_cycle_size_sk/2), int(i*duty_cycle_size_sk/2) + int(duty_cycle_size_sk/2)):
+                    self.subscans.insert(j + int(i*duty_cycle_size_sk/2) + int(duty_cycle_size_sk/2), tmp_list[j])
+
+            for i in range(len(self.subscans)):
+                print(self.subscans[i][0])
+
+        else:
+            #order file names by internal data timestamp
+            self.subscans.sort(key=lambda x:x[2])
+
         #self.subscans.sort(key=lambda x: (x[2], x[0]))
+        
         logger.debug("ordered files: %s" % (str([filename for filename,_,_ in
                                                 self.subscans]),))
         with fits.open(os.path.join(self.scan_path, self.SUMMARY)) as summary:
@@ -179,7 +228,9 @@ class DiscosScanConverter(object):
             current_index += 1
         return scan_cycle
             
+    # function called by "write_observation(self, scan_cycle, first_subscan_index):"
     def _load_metadata(self, section, polarization, index):
+       
         with fits.open(self.subscans[index][0]) as subscan:
             self.location = (subscan[0].header["SiteLongitude"] * u.rad,
                         subscan[0].header["SiteLatitude"] * u.rad)
@@ -209,14 +260,17 @@ class DiscosScanConverter(object):
             self.SubScanID = subscan[0].header["SubScanID"]
             self.source_name = subscan[0].header["SOURCE"]
 
-            # While using data in SARDARA format, each two sections are merged together
-            # This creates a data structure like 0,2,4 .... 
-            # THerefore some values are missing which are need to read out values in the RF table
-            #print('****** section *****', section)
-            #print(section == self.section_current_val)
-            if(section == self.section_current_val): # section_current_val is a auxiliary variable. Its value is updated at the end of the function
-                section = section + 1 # trick to change and add the missing section numbers when using SARDARA data format
-                #print('****** new section value *****', section)
+            # For SARDARA backend case:
+            # The scancycle function will merge the two sections (one for each polarization LL, RR) 
+            # For PS mode will have section = 0, polarization left, section = 0, polarization right
+            # For NOD mode will have section = 0, polarization left, section = 0, polarization right, section = 2, polarization left, section = 2, polarization right
+            # However, some parameters (f.e. bins and bandwidth) must be retrieved from each single section whose indexes are 0, 1, 2, 3 
+            # Within this loop, we are missing therefore the indexes 1 and 3 but instead 0 and 2 are repeated two times
+            # To overcome this issue, it is defined a variable "self.section_current_val" which will be updated any time at the end of the function
+            # So: during the first loop the variable is declared NULL and nothing happens since the section = 0. At the end of the loop the variable gets the value of the section i.e. 0
+            # In the second loop, the section value is still 0 which is the value of the variable. In this case the section value is augmentd by +1 and we can read data for section 1 
+            if(section == self.section_current_val): 
+                section = section + 1
 
             for sec in subscan["SECTION TABLE"].data:
                 if sec["id"] == section:
@@ -274,10 +328,10 @@ class DiscosScanConverter(object):
                 outputfilename = self.observation_time.datetime.strftime("%Y%j") + \
                     "_" + self.source_name + mode + FILE_EXTENSION
 
-                #outputfilename = self.observation_time.datetime.strftime("%Y%m%d-%H%M%S") + \
+                # Alternatively, using a full date-time format in the filename will produce a CLASS file for each duty cycle within the same observation
+                # outputfilename = self.observation_time.datetime.strftime("%Y%m%d-%H%M%S") + \
                 #                 "_" + self.source_name +\
                 #                 mode + FILE_EXTENSION
-
 
                 output_file_path = os.path.join(self.dest_dir, outputfilename)
                 try: 
@@ -405,19 +459,14 @@ class DiscosScanConverter(object):
                     cal_mean = cal[start_bin:stop_bin].mean()
                     off_mean = off[start_bin:stop_bin].mean()
 
-                    # Note for the Nodding mode
-                    # counts2kelvin value is calculated differently according to the feed (if Nodding mode is used)
-                    # For nodding case:
-                    # Sections 0 and 1 are relative to the central feed while sections 2 and 3 for the second feed (whatever it is)
-                    # Therefore we will use sig_mean or cal_mean values respectively for the Sections (0 and 1) and (2 and 3) 
-
-                    # Get the "counts2kelvin" according to the mode (i.e. Position Switching and Nodding)
-                    # CASE: Position Switching
-                    if(len(self.duty_cycle.keys())) == 3: 
+                    # The "counts2kelvin" parameter is calculated differently according to the mode used
+                    # Position Switching makes use of "cal_mean" values
+                    # Nodding makes use of "cal_mean" values for the central feed (sections 0, 1) and "sig_mean" values for the second feed (sections 2, 3)
+                
+                    if(len(self.duty_cycle.keys())) == 3: # CASE: Position Switching
                         counts2kelvin = self.calibrationMark / (cal_mean - off_mean)
                     
-                    # CASE: Position Switching
-                    if(len(self.duty_cycle.keys())) == 4: 
+                    if(len(self.duty_cycle.keys())) == 4:  # CASE: Nodding
                         if(sec_id == 0):
                             # counts2kelvin = self.calibrationMark / (sig_mean - off_mean)    
                             counts2kelvin = self.calibrationMark / (cal_mean - off_mean)    
@@ -469,16 +518,13 @@ class DiscosScanConverter(object):
                             vdef = summary_header["VDEF"],
                             vframe = summary_header["VFRAME"])
 
-            # get backend info name in the summary dict
-            # self.backend = summary_header["BackendName"]
-            # self.backend_name = summary_header["BackendName"][:3]
-            # Alternative way
-            # If the file name contains the substr "FEED_" then the backend is "skarab", otherwise "sardara"
+            # Backend name can be retrieved in two ways: [A] from the summary dict or [B] from the file name
+            # [A] self.backend = summary_header["BackendName"] or self.backend_name = summary_header["BackendName"][:3]
+            # [B] If the file name contains the substr "FEED_" then the backend is "skarab", otherwise "sardara"
             if("FEED_" in str(self.subscans[0][0])): # from "load_subscans" first index is the item number in the list, second index the value [0]=file name, [1] signal flag, [2]=time
                 self.backend_name = "ska"
             else:
                 self.backend_name = "sar"
-
 
 
         self.summary = (dict(rest_frequency = rest_frequency,
