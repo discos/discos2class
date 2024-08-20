@@ -337,6 +337,9 @@ QCheckBox:checked {
                <bold>true</bold>
               </font>
              </property>
+             <property name="toolTip">
+              <string>REFSIG</string>
+             </property>
              <property name="styleSheet">
               <string notr="true">QComboBox{
 	border: none;
@@ -481,6 +484,9 @@ QComboBox::down-arrow
                <bold>true</bold>
               </font>
              </property>
+             <property name="toolTip">
+              <string>SIGNAL</string>
+             </property>
              <property name="styleSheet">
               <string notr="true">QComboBox{
 	border: none;
@@ -572,6 +578,9 @@ QListView{
                <bold>true</bold>
               </font>
              </property>
+             <property name="toolTip">
+              <string>REFERENCE</string>
+             </property>
              <property name="styleSheet">
               <string notr="true">QComboBox{
 	border: none;
@@ -652,6 +661,9 @@ QListView{
                <width>40</width>
                <height>16777215</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>REFCAL</string>
              </property>
              <property name="styleSheet">
               <string notr="true">QComboBox{

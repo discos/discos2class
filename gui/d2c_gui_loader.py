@@ -27,6 +27,7 @@ class MainUI(QMainWindow):
     updateChrText = pyqtSignal(object)
 
     duty_cycle_size = 0
+    backend_name = ""
 
     def __init__(self):
         super(MainUI, self).__init__()
@@ -241,7 +242,7 @@ class MainUI(QMainWindow):
         else:
             # update QtextArea
             self.info_panel_ta.setCurrentCharFormat(self.color_format_err) 
-            self.updateText.emit('Duty-Cycle ERROR #' + str(nduty_cycle_err) + ', File #' + str(nfile))
+            self.updateText.emit('Duty-Cycle ERROR #' + str(nduty_cycle_err) + ', File: ' + str(nfile))
             self.info_panel_ta.setCurrentCharFormat(self.color_format_std) 
             self.info_panel_ta.appendPlainText('') 
           
@@ -253,7 +254,11 @@ class MainUI(QMainWindow):
         subscans = [] # Each row conatins scan information about path, signal type and timestamp data 
         duty_cycle_flags = []
         error = False
-        nfile_err = 0 
+        nfile_err = 0
+        filename_err = ""
+
+        mode = self.mode_cmb.currentText()
+        duty_cycle_size = int(self.duty_cycle_cmb0.currentText()) + int(self.duty_cycle_cmb1.currentText()) + int(self.duty_cycle_cmb2.currentText()) + int(self.duty_cycle_cmb3.currentText()) 
 
         # At firt, build the 'duty_cycle_flags' structure
         
@@ -293,9 +298,47 @@ class MainUI(QMainWindow):
                                           format = "mjd",
                                           scale = "utc")
                     ))
+
+        # Before sorting the subscans in time, the backend name must be retrieved
+        # Backend name can be retrieved in two ways: [A] from the summary dict or [B] from the file name
+        # [A] self.backend = summary_header["BackendName"] or self.backend_name = summary_header["BackendName"][:3]
+        # [B] If the file name contains the substr "FEED_" then the backend is "skarab", otherwise "sardara"
+        if("FEED_" in str(subscans[0][0])): # from "load_subscans" first index is the item number in the list, second index the value [0]=file name, [1] signal flag, [2]=time
+            self.backend_name = "ska"
+        else:
+            self.backend_name = "sar"
+
+        if(self.backend_name == "ska" and mode == "Nodding"):
+            # subscans should be sorted rather by internal time stamp as correct recording time (can differ from the disk rec time)
+            # check this out once testing with real skarab data -> self.subscans.sort(key=lambda x:x[2])
+            subscans.sort()
+            #for i in range(len(self.subscans)):
+            #    print(self.subscans[i][0])
+            tmp_list = []
+            # The Skarab duty_cycle_size is double than the Sardara one since feeds files are recorded independently 
+            duty_cycle_size_sk = duty_cycle_size*2 # case Nodding [1:6:6:1]=14 *2 feeds
+            cycles = int(len(subscans)/duty_cycle_size_sk)
+
+            tmp_list = subscans[1::2] # extracts and copy all items with odd indexes
+            del subscans[1::2] # del all items with odd indexes from the original list
+
+            # Create blocks in the original list by adding all even items in the original list
+            for i in range(0, cycles):
+                for j in range(int(i*duty_cycle_size_sk/2), int(i*duty_cycle_size_sk/2) + int(duty_cycle_size_sk/2)):
+                    subscans.insert(j + int(i*duty_cycle_size_sk/2) + int(duty_cycle_size_sk/2), tmp_list[j])
+
+            # for i in range(len(subscans)):
+            #    print(subscans[i][0])
+
+        else:
+            #order file names by internal data timestamp
+            subscans.sort(key=lambda x:x[2])
+
+
+            
         
         # Order fits file names by internal data timestamp
-        subscans.sort(key=lambda x:x[2])
+        # subscans.sort(key=lambda x:x[2])
 
         j = 0 # duty_cycle index
         d = 0 # duty_cycle current number
@@ -307,6 +350,7 @@ class MainUI(QMainWindow):
             
                 error = True
                 nfile_err = i
+                filename_err = subscans[i][0]
                 break
             else:
 
@@ -319,7 +363,7 @@ class MainUI(QMainWindow):
                 j = 0
                 d = d + 1
             
-        return error, d, i
+        return error, d, filename_err
           
     def enable_convert_btn(self):
         if( (self.source_folder != "") and (self.destination_folder != "") and (self.duty_cycle_size != 0)):
