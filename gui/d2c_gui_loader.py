@@ -24,10 +24,13 @@ BACKEND_TYPE = ['Sardara', 'Skarab']
 class MainUI(QMainWindow):
 
     updateText = pyqtSignal(str)   # Required to update the QplainTextArea widget during the gui thread
+    insertText = pyqtSignal(str) 
     updateChrText = pyqtSignal(object)
 
-    duty_cycle_size = 0
+    duty_cycle_size = 0 # default value. Any time any combo box is changed, the value is updated and the verify button disabled
     backend_name = ""
+
+    verify_result = [None]*3 # it contains the result of the duty cycle check 
 
     def __init__(self):
         super(MainUI, self).__init__()
@@ -60,10 +63,11 @@ class MainUI(QMainWindow):
         
         # Update the QplainTextArea widget during the gui thread
         self.updateText.connect(self.info_panel_ta.appendPlainText)
+        self.insertText.connect(self.info_panel_ta.insertPlainText)
         self.updateChrText.connect(self.info_panel_ta.setCurrentCharFormat)
 
         # Fix dimensions of the QMainWindow widget
-        self.setFixedSize(1000, 450)
+        self.setFixedSize(1000, 380)
         # self.centralwidget.setFixedSize(800,441)
 
         # adding the duty cycle values to the relative combo boxes
@@ -73,10 +77,10 @@ class MainUI(QMainWindow):
         self.duty_cycle_cmb3.addItems(DUTY_CYCLE_VALUES)
 
         #  adding action to combo box duty cycle values 
-        self.duty_cycle_cmb0.activated.connect(self.get_duty_cycle_size)
-        self.duty_cycle_cmb1.activated.connect(self.get_duty_cycle_size)
-        self.duty_cycle_cmb2.activated.connect(self.get_duty_cycle_size)
-        self.duty_cycle_cmb3.activated.connect(self.get_duty_cycle_size)
+        self.duty_cycle_cmb0.activated.connect(self.set_duty_cycle_size)
+        self.duty_cycle_cmb1.activated.connect(self.set_duty_cycle_size)
+        self.duty_cycle_cmb2.activated.connect(self.set_duty_cycle_size)
+        self.duty_cycle_cmb3.activated.connect(self.set_duty_cycle_size)
 
         # adding mode-type list to the relative combo box
         self.mode_cmb.addItems(MODE_TYPE)
@@ -120,12 +124,14 @@ class MainUI(QMainWindow):
         self.calibration_cb.setDisabled(value)
         self.mode_cmb.setDisabled(value)
 
-    def get_duty_cycle_size(self):
+    def set_duty_cycle_size(self):
 
         self.duty_cycle_size = int(self.duty_cycle_cmb0.currentText()) + int(self.duty_cycle_cmb1.currentText()) + int(self.duty_cycle_cmb2.currentText()) + int(self.duty_cycle_cmb3.currentText())
-
         self.enable_verify_btn()
-       
+
+    def get_duty_cycle_size(self):
+
+        return int(self.duty_cycle_size)
 
         
     def switch_duty_cycles(self):
@@ -188,6 +194,7 @@ class MainUI(QMainWindow):
             duty_cycle = str(self.duty_cycle_cmb1.currentText()) + ':'  + str(self.duty_cycle_cmb2.currentText()) + ':' + str(self.duty_cycle_cmb3.currentText())
         else:
             duty_cycle = str(self.duty_cycle_cmb0.currentText()) + ':'  + str(self.duty_cycle_cmb1.currentText()) + ':' + str(self.duty_cycle_cmb2.currentText()) + ':' +  str(self.duty_cycle_cmb3.currentText())
+        
         return duty_cycle
 
     def convert_btn_handler(self):
@@ -209,45 +216,56 @@ class MainUI(QMainWindow):
         self.thread = threading.Thread(target=self.exec_cmd, args=(executable_command,))
         self.thread.start()
         #self.thread.join()
-        
-
+    
     def verify_btn_handler(self):
-
+        
         file_error = False
         duty_cycle = self.build_duty_cycle()
-        executable_command = self.d2c_cmd_builder(self.debug_cb.isChecked(), duty_cycle, self.calibration_cb.isChecked(), self.version_cb.isChecked())                                        
+        executable_command = self.d2c_cmd_builder(duty_cycle, self.calibration_cb.isChecked())      
+        
         self.info_panel_ta.setCurrentCharFormat(self.color_format_hld) 
         self.info_panel_ta.appendPlainText('PARAMETERS SUMMARY:')
         self.info_panel_ta.setCurrentCharFormat(self.color_format_std) 
         self.info_panel_ta.appendPlainText('Duty Cycle -> ' + duty_cycle)
-        self.info_panel_ta.appendPlainText('Debug -> ' + str(self.debug_cb.isChecked()))
+        # self.info_panel_ta.appendPlainText('Debug -> ' + str(self.debug_cb.isChecked()))
         self.info_panel_ta.appendPlainText('Skip Calibration -> ' + str(self.calibration_cb.isChecked()))
-        self.info_panel_ta.appendPlainText('Version -> ' + str(self.version_cb.isChecked()))
+        # self.info_panel_ta.appendPlainText('Version -> ' + str(self.version_cb.isChecked()))
         self.info_panel_ta.appendPlainText('Mode -> ' + str( self.mode_cmb.currentText()))
         # self.info_panel_ta.appendPlainText('Backend -> ' + str( self.backend_cmb.currentText()))
+        self.info_panel_ta.setCurrentCharFormat(self.color_format_hld)
         self.info_panel_ta.appendPlainText("")
-        self.info_panel_ta.setCurrentCharFormat(self.color_format_hld) 
-        self.info_panel_ta.appendPlainText('COMMAND TO BE EXECUTED:')
+        self.updateText.emit('COMMAND TO BE EXECUTED:')
         self.info_panel_ta.setCurrentCharFormat(self.color_format_std) 
         self.info_panel_ta.appendPlainText(executable_command)
         self.info_panel_ta.appendPlainText("")
+        self.info_panel_ta.appendPlainText('Checking Duty-Cycle structure... ')
+       
+        self.disable_all_widgets(True)
+        self.info_panel_ta.repaint()
+        self.thread = threading.Thread(target=self.check_duty_cycle, args=())
+        self.thread.start()
+        self.thread.join() 
+        
+        if not (self.verify_result[0]):
 
-        self.check_fits_files_duty_cycle()
-
-        file_error, nduty_cycle_err, nfile  = self.check_fits_files_duty_cycle()
-        if not file_error:
-
+            self.info_panel_ta.insertPlainText('DONE. Ready to convert data!')
+            self.info_panel_ta.appendPlainText("")
+            self.disable_all_widgets(False)
             self.enable_convert_btn()
             
         else:
             # update QtextArea
+            self.info_panel_ta.insertPlainText('DONE. An error occurred!')
+            self.info_panel_ta.appendPlainText("")
             self.info_panel_ta.setCurrentCharFormat(self.color_format_err) 
-            self.updateText.emit('Duty-Cycle ERROR #' + str(nduty_cycle_err) + ', File: ' + str(nfile))
+            self.info_panel_ta.appendPlainText('Duty-Cycle #' + str(self.verify_result[1]) + ', File: ' + str(self.verify_result[2]))
             self.info_panel_ta.setCurrentCharFormat(self.color_format_std) 
-            self.info_panel_ta.appendPlainText('') 
-          
+            self.info_panel_ta.appendPlainText('')
+            self.disable_all_widgets(False)
+            self.disable_convert_btn()
+           
 
-    def check_fits_files_duty_cycle(self):
+    def check_duty_cycle(self):
 
         # This method checks if the fits files contained in the source folder match the duty cycle structure
 
@@ -258,7 +276,7 @@ class MainUI(QMainWindow):
         filename_err = ""
 
         mode = self.mode_cmb.currentText()
-        duty_cycle_size = int(self.duty_cycle_cmb0.currentText()) + int(self.duty_cycle_cmb1.currentText()) + int(self.duty_cycle_cmb2.currentText()) + int(self.duty_cycle_cmb3.currentText()) 
+        duty_cycle_size = self.get_duty_cycle_size() 
 
         # At firt, build the 'duty_cycle_flags' structure
         
@@ -282,7 +300,7 @@ class MainUI(QMainWindow):
         for i in range(int(self.duty_cycle_cmb3.currentText())):
                 
             duty_cycle_flags.append('REFCAL')
-
+        
         # Get useful information relative to each scan contained in the selected source folder
         for subscan_file in os.listdir(self.source_folder):
 
@@ -297,8 +315,8 @@ class MainUI(QMainWindow):
                                      Time(subscan["DATA TABLE"].data["time"][0],
                                           format = "mjd",
                                           scale = "utc")
-                    ))
-
+                ))
+        
         # Before sorting the subscans in time, the backend name must be retrieved
         # Backend name can be retrieved in two ways: [A] from the summary dict or [B] from the file name
         # [A] self.backend = summary_header["BackendName"] or self.backend_name = summary_header["BackendName"][:3]
@@ -333,37 +351,54 @@ class MainUI(QMainWindow):
         else:
             #order file names by internal data timestamp
             subscans.sort(key=lambda x:x[2])
-
-
-            
         
         # Order fits file names by internal data timestamp
         # subscans.sort(key=lambda x:x[2])
-
+        
         j = 0 # duty_cycle index
         d = 0 # duty_cycle current number
-
+        
         # Start fits file and duty cycle comparison
         for i in range(len(subscans)):
         
-            if(subscans[i][1] != duty_cycle_flags[j]):
+            if(subscans[i][1] != duty_cycle_flags[j]): # in case of mismatch
             
                 error = True
                 nfile_err = i
                 filename_err = subscans[i][0]
+
+                self.verify_result[0] = error
+                self.verify_result[1] = d
+                self.verify_result[2] = filename_err
+                
                 break
             else:
 
                 error = False
 
             j = j + 1
-
             if(j == len(duty_cycle_flags)):
 
                 j = 0
                 d = d + 1
+
+        '''
+        if not error:
+
+            self.insertText.emit('DONE. Ready to convert data!')
+            self.updateText.emit("")
+            self.disable_all_widgets(False)
+            self.enable_convert_btn()
             
-        return error, d, filename_err
+        else:
+            # update QtextArea
+            self.info_panel_ta.setCurrentCharFormat(self.color_format_err) 
+            self.updateText.emit('Duty-Cycle ERROR #' + str(d) + ', File: ' + str(filename_err))
+            self.info_panel_ta.setCurrentCharFormat(self.color_format_std) 
+            self.updateText.emit('')
+        '''
+        
+        # return error, d, filename_err
           
     def enable_convert_btn(self):
         if( (self.source_folder != "") and (self.destination_folder != "") and (self.duty_cycle_size != 0)):
@@ -377,17 +412,17 @@ class MainUI(QMainWindow):
         else:
             self.verify_btn.setDisabled(True)
       
-    def d2c_cmd_builder(self, debug_mode, duty_cycle, calibration, version):
+    def d2c_cmd_builder(self, duty_cycle, calibration):
 
         cmd = "discos2class "
-        if(debug_mode):
-            cmd = cmd + '-d '
+        #if(debug_mode):
+        #    cmd = cmd + '-d '
         cmd = cmd + '-o ' + self.destination_folder + ' '
         cmd = cmd + '-c ' + duty_cycle + ' '
         if(calibration):
             cmd = cmd + '-s '
-        if(version):
-            cmd = cmd + '--version '
+        #if(version):
+        #    cmd = cmd + '--version '
         cmd = cmd + self.source_folder
         
         return cmd
