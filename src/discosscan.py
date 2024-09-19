@@ -325,8 +325,15 @@ class DiscosScanConverter(object):
                 logger.debug("opened section %d pol %s" % (sec_id, pol))
                 self._load_metadata(sec_id, pol, first_subscan_index)
 
-                outputfilename = self.observation_time.datetime.strftime("%Y%j") + \
-                    "_" + self.source_name + mode + FILE_EXTENSION
+                # This is the standard method used to create the output file name. Ex: 2024234_IC485_nod.gdf
+                # outputfilename = self.observation_time.datetime.strftime("%Y%j") + \
+                #    "_" + self.source_name + mode + FILE_EXTENSION
+
+                # This method uses the self.scan_path value to create the output file name
+                # Inside there are multiple scans (for ex: 350, each duty cycle 14 subscans in Fitzilla format)
+                # The output file name is like: 20240821-051506-26-23-IC485_nod.gdf
+                folders =  self.scan_path.split(os.sep) # an array containing the full path as separated folders
+                outputfilename = folders[len(folders)-1] + mode + FILE_EXTENSION
 
                 # Alternatively, using a full date-time format in the filename will produce a CLASS file for each duty cycle within the same observation
                 # outputfilename = self.observation_time.datetime.strftime("%Y%m%d-%H%M%S") + \
