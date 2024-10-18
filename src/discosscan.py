@@ -455,6 +455,15 @@ class DiscosScanConverter(object):
                     on, off, cal = onoffcal[sec_id][pol]
                 else:
                     sig, on, off, cal = onoffcal[sec_id][pol]
+                
+                #print("Data for", sec_id, pol)
+                #print("on", on[5140:5150])
+                #print("off", off[5140:5150])
+                #print("cal", cal[5140:5150])
+                #print("sig", sig[5140:5150])
+
+                #print(self.skip_calibration)
+                #print(cal is not None)
                
                 if((not self.skip_calibration) and 
                    (cal is not None)):
@@ -492,15 +501,38 @@ class DiscosScanConverter(object):
                     tsys = counts2kelvin * off_mean
                     obs.head.gen.tsys = tsys
                     logger.debug("tsys: %f" % (tsys,))
-
-                    obs.datay = ((on - off) / off ) * tsys
-                
+                   
+                    obs.datay = ((on - off) / off ) * tsys # obs.datay has TYPE <class 'numpy.ndarray'>
+                   
                 else:
                     logger.debug("skip calibration")
                     obs.head.gen.tsys = 1. # ANTENNA TEMP TABLE is unknown
                     
                     obs.datay = ((on - off) / off )
+
+                # Class needs numbers with some decimal digits
+                # 0. is therefore not allowed and would a blanck histo bar in the graph
+                # 0. must be converted for example to 0.00000000001 as declaring the single array lelemnts as 0.0000 won't work
+                # This beacuse numerically, a float number 17. is equivalent to 17.0000. 
+                # It is only a metter of how data are displayed  
+                # 
+                # From the dataset obs.datay (16384 channels), at first, we detect all the items with value 0.
+                # Next we associate a value of 0.00000000001 to these values
+                # Since class procedes graphs with 4 decimal digits, all cvalues will be truncated and rounded and 0.00000000001 will be 0.0000    
+
+                zeros = np.where(obs.datay == 0.0)[0]
+                # print(zeros)
                 
+                for i in range(len(zeros)):
+                    #obs.datay[zeros[i]] = 0.00000000001
+                    obs.datay[zeros[i]] = int(0.)
+
+                #print(obs.head.spe.line)
+                #print(obs.head.gen.teles)
+
+                #print("Final data", obs.datay[21:30])
+                #print("Final data", obs.datay[5140:5150])
+
                 obs.write()
                 self.file_class_out.close() 
 

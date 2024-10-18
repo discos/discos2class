@@ -57,9 +57,14 @@ class ScanCycle(object):
         """
         @param data: a single spectrum file containing all polarizations
         """
+
         self.data[section_id][pol][flag]["spectrum"] += data
         self.data[section_id][pol][flag]["samples"] += samples
         self.data[section_id][pol][flag]["integration"] += integration
+
+        #print("Added data for: ", section_id, flag, pol, data, samples, integration)
+        #print(data[5140:5145])
+        #print("\n")
 
     def add_data_file(self, fits_file, flag="on"):
        
@@ -101,7 +106,7 @@ class ScanCycle(object):
                             # manage the error
                             pass
                         else: # if no errors then execute the following code
-                            print('***SECTION ID and FLAG***', section['id'], flag)
+                            # print('***SECTION ID and FLAG***', section['id'], flag)
                             # merge LCP and RCP data in a single spectrum of 32000 channels
                             data = np.hstack([lcp_data,rcp_data])
                             self.add_section_data(section, 
@@ -131,7 +136,7 @@ class ScanCycle(object):
                             # manage the error
                             pass
                         else: # if no errors then execute the following code
-                            print('***SECTION ID and FLAG***', section['id'], flag)
+                            # print('***SECTION ID and FLAG***', section['id'], flag)
                             # merge LCP and RCP data in a single spectrum of 32000 channels
                             data = np.hstack([lcp_data,rcp_data])
                             self.add_section_data(section, 
@@ -178,9 +183,6 @@ class ScanCycle(object):
         result = dict()
         for s_id,section in self.data.items():
 
-            print("s_id", s_id)
-            print("section", section)
-
             result[s_id] = dict()
             for pol_id, data in section.items():
                 on = data['on'][0]["spectrum"] / data["on"][0]["samples"]
@@ -215,5 +217,12 @@ class ScanCycle(object):
                 #print("data[on][0][samples]", data["on"][0]["samples"])
                 #print("data[off][0][samples]", data["off"][0]["samples"])
                 #print("data[cal][0][samples]", data["cal"][0]["samples"])
+                #print("Data for", s_id, pol_id)
+                #print("on", on[5140:5150])
+                #print("off", off[5140:5150])
+                #print("cal", cal[5140:5150])
+                #print("sig", sig[5140:5150])
+
+
         return result
 

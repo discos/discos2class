@@ -203,7 +203,9 @@ class MainUI(QMainWindow):
 
         duty_cycle = self.build_duty_cycle()
 
-        executable_command = self.d2c_cmd_builder(self.debug_cb.isChecked(), duty_cycle, self.calibration_cb.isChecked(), self.version_cb.isChecked())
+        # executable_command = self.d2c_cmd_builder(self.debug_cb.isChecked(), duty_cycle, self.calibration_cb.isChecked(), self.version_cb.isChecked())
+        executable_command = self.d2c_cmd_builder(duty_cycle, self.calibration_cb.isChecked())
+     
         
         self.info_panel_ta.appendPlainText('Please wait while data are being converted...')
         self.info_panel_ta.appendPlainText("")
