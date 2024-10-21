@@ -1,0 +1,1068 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>990</width>
+    <height>403</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>d2c-GUI [Data converter programmed by Dr. Fabio Schirru]</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>951</width>
+      <height>331</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>10</number>
+     </property>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_1" stretch="0,2">
+       <property name="spacing">
+        <number>10</number>
+       </property>
+       <item>
+        <layout class="QGridLayout" name="gridLayout" columnstretch="1,0">
+         <item row="1" column="0">
+          <widget class="QLabel" name="destination_folder_lb">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>130</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Destination Folder</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <property name="spacing">
+            <number>2</number>
+           </property>
+           <item>
+            <widget class="QComboBox" name="duty_cycle_cmb0">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>40</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>REFSIG</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QComboBox{
+	border: none;
+	background-color: rgb(87, 96, 134);
+	selection-background-color: rgb(126, 133, 161);
+	color: rgb(255, 255, 255);
+	font-weight: bold;
+	padding: 5px 
+}
+
+#duty_cycle_cmb0:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+
+
+QListView{
+    border:                 none;
+    color:                      rgb(87, 96, 134);
+    background-color:   rgb(87, 96, 134);
+    font-weight:            bold;
+   
+}
+
+
+/*
+QComboBox
+{
+    color:white;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:1, stop: 1  #05B0CB, stop: 0  #05B0CB);
+    border-color: rgba(255,255,255,200);
+    border-width: 1px;
+    border-style: solid;
+}
+
+
+
+QComboBox QListView
+{
+    border-style: none;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:0, stop: 1 rgba(228, 41, 81, 100), stop: 0 rgba(234, 107, 101, 100));
+}
+
+QListView:item
+{
+   color:red;
+}
+
+
+
+/*
+QComboBox
+{
+    color:white;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:1, stop: 1 rgba(228, 41, 81, 100), stop: 0 rgba(234, 107, 101, 100));
+    border-color: rgba(255,255,255,200);
+    border-width: 1px;
+    border-style: solid;
+}
+
+QComboBox QListView
+{
+    border-style: none;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:0, stop: 1 rgba(228, 41, 81, 100), stop: 0 rgba(234, 107, 101, 100));
+}
+
+QComboBox::drop-down
+{
+    width: 20px;
+    border: 1px;
+    border-color:white;
+    border-left-style:solid;
+    border-top-style: none;
+    border-bottom-style: none;
+    border-right-style: none;
+}
+
+QComboBox::down-arrow
+{
+    image: url(:/ArrowImages/images/whitearrowdown16.png);
+    width: 16px;
+    height: 16px;
+}
+
+</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_4">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>5</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>5</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="duty_cycle_cmb1">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>40</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>SIGNAL</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QComboBox{
+	border: none;
+	background-color: rgb(87, 96, 134);
+	selection-background-color: rgb(126, 133, 161);
+	color: rgb(255, 255, 255);
+	font-weight: bold;
+	padding: 5px 
+}
+
+#duty_cycle_cmb1:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+QListView{
+    border:                 none;
+    color:                      rgb(87, 96, 134);
+    background-color:   rgb(87, 96, 134);
+    font-weight:            bold;
+   
+}
+
+/*QComboBox
+{
+    color:white;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:1, stop: 1  #05B0CB, stop: 0  #05B0CB);
+    border-color: rgba(255,255,255,200);
+    border-width: 1px;
+    border-style: solid;
+}
+
+</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>5</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>5</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="duty_cycle_cmb2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>40</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>REFERENCE</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QComboBox{
+	border: none;
+	background-color: rgb(87, 96, 134);
+	selection-background-color: rgb(126, 133, 161);
+	color: rgb(255, 255, 255);
+	font-weight: bold;
+	padding: 5px 
+}
+
+#duty_cycle_cmb2:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+QListView{
+    border:                 none;
+    color:                      rgb(87, 96, 134);
+    background-color:   rgb(87, 96, 134);
+    font-weight:            bold;
+   
+}
+/*QComboBox
+{
+    color:white;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:1, stop: 1  #05B0CB, stop: 0  #05B0CB);
+    border-color: rgba(255,255,255,200);
+    border-width: 1px;
+    border-style: solid;
+}
+
+</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="minimumSize">
+              <size>
+               <width>5</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>5</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="duty_cycle_cmb3">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>40</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>40</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>REFCAL</string>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">QComboBox{
+	border: none;
+	background-color: rgb(87, 96, 134);
+	selection-background-color: rgb(126, 133, 161);
+	color: rgb(255, 255, 255);
+	font-weight: bold;
+	padding: 5px 
+}
+
+#duty_cycle_cmb3:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+QListView{
+    border:                 none;
+    color:                      rgb(87, 96, 134);
+    background-color:   rgb(87, 96, 134);
+    font-weight:            bold;
+   
+}
+/*QComboBox
+{
+    color:white;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:1, stop: 1  #05B0CB, stop: 0  #05B0CB);
+    border-color: rgba(255,255,255,200);
+    border-width: 1px;
+    border-style: solid;
+}
+
+</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="calibration_lb">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Skip Calibration</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="destination_folder_btn">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">#destination_folder_btn {
+  	background-color: rgb(87, 96, 134);
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+	border-style: solid;
+    border-width: 0px;
+	/*border-top: 2px solid white;
+	border-right: 2px solid white;*/
+    border-color: black black black black; 
+}
+
+#destination_folder_btn:hover {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+#destination_folder_btn:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}</string>
+           </property>
+           <property name="text">
+            <string>SELECT</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="source_folder_lb">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>100</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Source Folder</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="duty_cycle_lb">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Duty Cycle</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="backend_lb">
+           <property name="text">
+            <string>Backend Type</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QPushButton" name="source_folder_btn">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">#source_folder_btn {
+	background-color: rgb(87, 96, 134);
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+	border-style: solid;
+    border-width: 0px;
+	/*border-top: 2px solid white;
+	border-right: 2px solid white;*/
+    border-color: black black black black; 
+}
+
+#source_folder_btn:hover {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+#source_folder_btn:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}</string>
+           </property>
+           <property name="text">
+            <string>SELECT</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QCheckBox" name="calibration_cb">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QCheckBox::indicator {
+    width: 15px;
+    height: 15px;
+    background-color: qradialgradient( spread:pad,
+                            cx:0.5,
+                            cy:0.5,
+                            radius:0.5,
+                            fx:0.5,
+                            fy:0.5,
+                            stop:1 #ddd, 
+								stop:0 #fff);
+
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+	/*border-top: 2px solid white;
+	border-right: 2px solid white;*/
+    border-color: black black black black; 
+}
+
+/*
+QCheckBox::indicator {
+    width: 40px;
+    height: 40px;
+    background-color: qradialgradient(spread:pad, 
+                            cx:0.5,
+                            cy:0.5,
+                            radius:1.9,
+                            fx:0.5,
+                            fy:0.5,
+                            stop:0 rgba(255, 0, 0, 255), 
+                            stop:1 rgba(0, 0, 0, 255));
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: white white black black;
+} */
+
+QCheckBox::indicator:checked {
+    background-color: qradialgradient(spread:pad, 
+                            cx:0.5,
+                            cy:0.5,
+                            radius:0.5,
+                            fx:0.5,
+                            fy:0.5,
+                            stop:0 #ddd, 
+                            stop:1 red);
+} /*
+QCheckBox:checked, QCheckBox::indicator:checked {
+    border-color: black black white white;
+}
+/*
+QCheckBox:checked {
+    background-color: qradialgradient(spread:pad, 
+                            cx:0.739, 
+                            cy:0.278364, 
+                            radius:0.378, 
+                            fx:0.997289, 
+                            fy:0.00289117, 
+                            stop:0 rgba(255, 255, 255, 255), 
+                            stop:1 rgba(160, 160, 160, 255));
+} */</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="backend_cmb">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QComboBox{
+	border: none;
+	background-color: rgb(87, 96, 134);
+	selection-background-color: rgb(126, 133, 161);
+	color: rgb(255, 255, 255);
+	font-weight: bold;
+	padding: 5px 
+}
+
+#backend_cmb:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+QListView{
+    border:                 none;
+    color:                      rgb(87, 96, 134);
+    background-color:   rgb(87, 96, 134);
+    font-weight:            bold;
+   
+}
+/*QComboBox
+{
+    color:white;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:1, stop: 1  #05B0CB, stop: 0  #05B0CB);
+    border-color: rgba(255,255,255,200);
+    border-width: 1px;
+    border-style: solid;
+}
+
+</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="mode_lb">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Mode</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QComboBox" name="mode_cmb">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QComboBox{
+	border: none;
+	background-color: rgb(87, 96, 134);
+	selection-background-color: rgb(126, 133, 161);
+	color: rgb(255, 255, 255);
+	font-weight: bold;
+	padding: 5px 
+}
+
+#mode_cmb:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+QListView{
+    border:                 none;
+    color:                      rgb(87, 96, 134);
+    background-color:   rgb(87, 96, 134);
+    font-weight:            bold;
+   
+}
+/*QComboBox
+{
+    color:white;
+    background-color: qlineargradient(x1:0, y1:0, x2:1,y2:1, stop: 1  #05B0CB, stop: 0  #05B0CB);
+    border-color: rgba(255,255,255,200);
+    border-width: 1px;
+    border-style: solid;
+	padding: 20x
+}
+
+</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="info_panel_ta">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>600</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>500</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item alignment="Qt::AlignHCenter">
+      <widget class="Line" name="line">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>940</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>200</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
+       <property name="spacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>690</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="verify_btn">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>120</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">#verify_btn {
+  	background-color: rgb(87, 96, 134);
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+	border-style: solid;
+    border-width: 0px;
+	/*border-top: 2px solid white;
+	border-right: 2px solid white;*/
+    border-color: black black black black; 
+}
+
+#verify_btn:hover {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+#verify_btn:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}</string>
+         </property>
+         <property name="text">
+          <string>VERIFY</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="convert_btn">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>120</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">#convert_btn {
+  	background-color: rgb(87, 96, 134);
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+	border-style: solid;
+    border-width: 0px;
+	/*border-top: 2px solid white;
+	border-right: 2px solid white;*/
+    border-color: black black black black; 
+}
+
+#convert_btn:hover {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}
+
+#convert_btn:disabled {
+	background-color: rgb(126, 133, 161);
+  	/*background-color: #40DAEA;*/
+  	color: white;
+  	border: none;
+  	padding: 5px;
+  	/*border-radius: 5px;*/
+}</string>
+         </property>
+         <property name="text">
+          <string>CONVERT</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>990</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
