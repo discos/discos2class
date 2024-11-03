@@ -212,7 +212,7 @@ external python packages:
 Any astropy version >= 1.0 should be enough for the software to work, while 
 pyclassfiller is provided by the **GILDAS** package that you can find at 
 https://www.iram.fr/IRAMFR/GILDAS/ . We have installed the latest stable release 
-that is **GILDAS Version: mar16a**
+that is **GILDAS Version: apr24a**
 
 ## Installation
 
@@ -222,7 +222,7 @@ The command line tool can be installed via:
 $ python setup.py install
 ```
 
-Tested with Python 3.8
+Tested with Python 3.11.8
 
 
 
