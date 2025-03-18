@@ -435,7 +435,7 @@ class MainUI(QMainWindow):
         
         else:
             
-            paths = ["/roach2_nuraghe/data/", "/discos-archive/data"] 
+            paths = ["/roach2_nuraghe/data/", "/discos-archive/data/"] 
 
             print(f"The file '{full_path_ini}' does not exist. Initialization started...")
             # config.ini initialization
