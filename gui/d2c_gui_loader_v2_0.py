@@ -13,11 +13,13 @@ from PyQt5.QtCore import pyqtSignal, QDateTime, QThread, QTimer, QTime
 from PyQt5.uic import loadUi
 from tkinter import filedialog
 
+# VERSION DATE: 18-03-2025
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 # Add the subfolder to sys.path
 sys.path.append(os.path.join(SCRIPT_DIR, 'src'))
-# The previous line allowsto call modules without specifying the subfolders where they are located
+# The previous line allows to call modules without specifying the subfolders where they are located
 
 from duty_cycle import DutyCycle
 from file_services import FileServices
@@ -266,8 +268,9 @@ class MainUI(QMainWindow):
     scan_cycles = [] # an array containing the number of scan cycles per each folder
     
     # List definitions  
+    # SERVER_BACKEND = ['SARDARA_BKD', 'SKARAB_BKD', 'TEST']
     SERVER_BACKEND = ['SARDARA_BKD', 'SKARAB_BKD']
-    SERVER_PING = ['192.168.200.216', '192.168.203.36']
+    SERVER_PING = ['192.168.200.216', '192.168.203.36', '192.168.200.216']
     DUTY_CYCLE_VALUES = ['0','1','2','3','4','5','6','7','8','9']
     MODE_TYPE = ['POSITION SWITCHING', 'NODDING']
     COMBO_MSGs = ['NOT AVAILABLE'] 
@@ -432,7 +435,7 @@ class MainUI(QMainWindow):
         
         else:
             
-            paths = ["/roach2_nuraghe/data/", "discos-archive/data"] 
+            paths = ["/roach2_nuraghe/data/", "/discos-archive/data/"] 
 
             print(f"The file '{full_path_ini}' does not exist. Initialization started...")
             # config.ini initialization
@@ -657,7 +660,7 @@ class MainUI(QMainWindow):
         # Create the duty cycle string
         if(self.mode_cmb.currentText() == self.MODE_TYPE[0]):
 
-            duty_cycle = str(self.signal_cmb.currentText()) + ':'  + str(self.ref_cmb.currentText()) + ':' + str(self.refcal.currentText())
+            duty_cycle = str(self.signal_cmb.currentText()) + ':'  + str(self.ref_cmb.currentText()) + ':' + str(self.refcal_cmb.currentText())
         
         else:
             
