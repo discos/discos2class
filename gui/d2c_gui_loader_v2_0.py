@@ -1,5 +1,6 @@
 import configparser
 import argparse
+import math
 import os
 import time
 import subprocess 
@@ -7,7 +8,7 @@ import sys
 
 from astropy.io import fits
 from astropy.time import Time
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QStandardItemModel, QStandardItem, QColor
 from PyQt5.QtWidgets import QMainWindow, QApplication, QProgressBar
 from PyQt5.QtCore import pyqtSignal, QDateTime, QThread, QTimer, QTime
 from PyQt5.uic import loadUi
@@ -33,7 +34,7 @@ class CheckWorkerThread(QThread):
     # Signal to notify the main thread to disable/enable the button in the interface
     update_button_signal = pyqtSignal(bool)
     # Signal to notify the main thread (UI) to update the console (QListView) in the interface 
-    update_console_lv_signal = pyqtSignal(str)
+    update_console_lv_signal = pyqtSignal(str, QColor)
     # Signal to notify the main thread (UI) to update the progressbar range values
     update_check_pb_range = pyqtSignal(QProgressBar, int, int)
     # Signal to notify the main thread (UI) to update the progressbar current value
@@ -65,7 +66,7 @@ class CheckWorkerThread(QThread):
     def run(self):
 
         # Disable the button when the thread starts
-        self.update_console_lv_signal.emit("Duty cycle check started. Please wait...") 
+        self.update_console_lv_signal.emit("Duty cycle check started. Please wait...", QColor("black")) 
 
         folders_to_scan = []
 
@@ -89,7 +90,7 @@ class CheckWorkerThread(QThread):
 
             self.subscans.clear()
 
-            self.update_console_lv_signal.emit("Checking SOURCE FOLDER: " + folders_to_scan[f]) 
+            self.update_console_lv_signal.emit("Checking SOURCE FOLDER: " + folders_to_scan[f], QColor("black")) 
             
             # Get useful information relative to each scan contained in the selected source folder
             for subscan_file in os.listdir(input_scan_directory):
@@ -161,7 +162,8 @@ class CheckWorkerThread(QThread):
                     filename_err = self.subscans[i][0]
 
                     check_result[0] = error
-                    check_result[1] = d
+                    #check_result[1] = d
+                    check_result[1] = math.floor(i/len(self.subscans))
                     check_result[2] = filename_err
 
                     f = len(folders_to_scan)
@@ -252,7 +254,7 @@ class MainUI(QMainWindow):
     # Signal to notify the main thread to disable/enable the button in the interface
     update_button_signal = pyqtSignal(bool)
     # Signal to notify the main thread (UI) to update the console (QListView) in the interface 
-    update_console_lv_signal = pyqtSignal(str)
+    update_console_lv_signal = pyqtSignal(str, QColor)
     # Signal to notify the main thread (UI) to update the progressbar range values
     update_progressbar_range = pyqtSignal(int, int)
     # Signal to notify the main thread (UI) to update the progressbar current value
@@ -526,28 +528,32 @@ class MainUI(QMainWindow):
 
         if(error):
         
-            self.update_console_lv('FILE ERROR - [DUTY CYCLE: ' + str(check_result[1]) + ', FILE: ' + check_result[2] + '. Please try again.')
-            self.update_console_lv("")
+            self.update_console_lv('FILE ERROR - [DUTY CYCLE: ' + str(check_result[1]) + ', FILE: ' + check_result[2] + '.', QColor("red"))
+            self.update_console_lv('Data conversion may provide wrong results!', QColor("red"))
+            #self.update_console_lv("", QColor("black"))
             self.enable_check_btn()
+            # Get the parameters anyway to start the process
+
            
+        #else:
+
+        # After disabling the combo mode restore it to the prevuious value
+        if(self.mode_cmb.currentText() == self.MODE_TYPE[1]):
+            self.enable_nodding(True)
         else:
+            self.enable_nodding(False)
 
-            # After disabling the combo mode restore it to the prevuious value
-            if(self.mode_cmb.currentText() == self.MODE_TYPE[1]):
-                self.enable_nodding(True)
-            else:
-                self.enable_nodding(False)
+        n_duty_cycles = int(subscans / duty_cycle_size)
+        self.update_console_lv("DUTY CYCLES FOUND [" + str(n_duty_cycles) + "]. Data check completed", QColor("black"))
+        self.update_console_lv("", QColor("black"))
 
-            n_duty_cycles = int(subscans / duty_cycle_size)
-            self.update_console_lv("DUTY CYCLES FOUND [" + str(n_duty_cycles) + "]. Data check successfully completed")
-            self.update_console_lv("")
+        # Enable the process button
+        self.start_btn.setEnabled(True)
 
-            # Enable the process button
-            self.start_btn.setEnabled(True)
-
-            # Set the number of subscan per folder
-            self.n_subscans = subscans
-            self.scan_cycles.append(n_duty_cycles)
+        # Set the number of subscan per folder
+        self.n_subscans = subscans
+        #print('SCAN CYCLE PAR', subscans, duty_cycle_size, n_duty_cycles)
+        self.scan_cycles.append(n_duty_cycles)
 
         # Scroll to the bottom of the list view
         self.scroll_to_bottom()
@@ -645,12 +651,12 @@ class MainUI(QMainWindow):
         
         if(self.destination_folder):
             
-            self.update_console_lv('Selected DESTINATION FOLDER: ' + self.destination_folder)
+            self.update_console_lv('Selected DESTINATION FOLDER: ' + self.destination_folder, QColor("black"))
             self.enable_check_btn()
         
         else:
             
-            self.update_console_lv('Selected DESTINATION FOLDER: <Not Specified>')
+            self.update_console_lv('Selected DESTINATION FOLDER: <Not Specified>', QColor("black"))
             self.destination_folder = ""
 
     
@@ -692,12 +698,12 @@ class MainUI(QMainWindow):
             
         if(result): # case of errors
             
-            self.update_console_lv("Data processing ended with errors! Please check your data and try again.") 
+            self.update_console_lv("Data processing ended with errors! Please check your data and try again.", QColor("red")) 
 
         else:
                 
-            self.update_console_lv('Data processing successfully completed! Enjoy GILDAS :-)')
-            self.update_console_lv('')
+            self.update_console_lv('Data processing successfully completed! Enjoy GILDAS :-)', QColor("black"))
+            self.update_console_lv('', QColor("black"))
 
         # Scroll to the bottom of the list view
         self.scroll_to_bottom()
@@ -726,7 +732,7 @@ class MainUI(QMainWindow):
         self.current_index = 0
         # Disable the button when the thread starts
         self.update_widgets_state(False)
-        self.update_console_lv("Data processing started! Please wait...") 
+        self.update_console_lv("Data processing started! Please wait...", QColor("black")) 
 
         # Create the duty cycle string
         duty_cycle = self.get_duty_cycle()
@@ -747,7 +753,7 @@ class MainUI(QMainWindow):
                 + self.folder0_cmb.currentText() + '/' + folders_to_scan[self.current_index])
            
             executable_command = self.d2c_cmd_builder(duty_cycle, self.skip_cal_cb.isChecked(), input_scan_directory, self.destination_folder)
-            self.update_console_lv_signal.emit("COMMAND BEING EXECUTED -> " + executable_command)
+            self.update_console_lv_signal.emit("COMMAND BEING EXECUTED -> " + executable_command, QColor("black"))
 
             # Scroll to the bottom of the list view
             self.scroll_to_bottom()
@@ -830,7 +836,7 @@ class MainUI(QMainWindow):
     
       
 
-    def update_console_lv(self, string: str):
+    def update_console_lv(self, string: str, color: QColor):
 
         current_date = QDateTime.currentDateTime().toString("dd-MM-yyyy")
         # Get the current time (you can also adjust the format if you want to include time)
@@ -840,8 +846,14 @@ class MainUI(QMainWindow):
         # Create a QStandardItem with the current date and time
         init_msg = f"[{current_date} - {current_time}]: " + string
         init_msg_item = QStandardItem(init_msg)
+        # Set the foreground color according to the message ('red' for errors, 'black' otherwise)
+        init_msg_item.setForeground(color)
         # Add the item to the model (which updates the QListView)
+       
         self.model.appendRow(init_msg_item)
+
+        
+    
 
         scrollbar = self.console_lv.verticalScrollBar()
         # Scroll to the maximum value (bottom of the list)
