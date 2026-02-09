@@ -3,7 +3,10 @@ logger = logging.getLogger(__name__)
 
 import numpy as np
 
-POLARIZATIONS = ["LCP", "RCP"]
+#POLARIZATIONS = ["LCP", "RCP"]
+#POLARIZATIONS = ["LL", "RR", "LR", "RL"]
+POLARIZATIONS = ["LCP", "RCP", "Q", "U"]
+ 
 POLARIZATIONS_SPECTRA = ["LCP", "RCP"]
 
 class ScanCycle(object):
@@ -63,6 +66,7 @@ class ScanCycle(object):
                                             ('samples', np.int_),
                                             ('integration', np.float64)])
         print(self.data.items())
+       
 
     @property
     def sections(self):

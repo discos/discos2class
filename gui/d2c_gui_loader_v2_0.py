@@ -14,7 +14,7 @@ from PyQt5.QtCore import pyqtSignal, QDateTime, QThread, QTimer, QTime
 from PyQt5.uic import loadUi
 from tkinter import filedialog
 
-# VERSION DATE: 18-03-2025
+# VERSION DATE: 09-02-2026
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -269,7 +269,9 @@ class MainUI(QMainWindow):
     progress_timer = False
     scan_cycles = [] # an array containing the number of scan cycles per each folder
     
-    # List definitions  
+    # List definitions
+    # If you want to add a TEST item which points to data in the home02 folder then uncomment the following line
+    # Next, add the home02 full-path of data as third item in the list of paths inside the config.ini file 
     # SERVER_BACKEND = ['SARDARA_BKD', 'SKARAB_BKD', 'TEST']
     SERVER_BACKEND = ['SARDARA_BKD', 'SKARAB_BKD']
     SERVER_PING = ['192.168.200.216', '192.168.203.36', '192.168.200.216']

@@ -19,12 +19,21 @@ class FileServices():
         # The relative regular expression (RegEx) is the following:
         r = re.compile("^[0-9]{1,2}-[0-9]{2}$")
 
+        if('home02' in root_folder):
+
+            root_folder = '/home02/'
+
         # At first, check if a specific directory or mount point exists
         print(os.path.exists(root_folder))
 
         if os.path.ismount(root_folder):
     
             print(f"Disk {root_folder} is mounted and visible.")
+
+            if(root_folder=='/home02/'):
+                print('TEST folder')
+                root_folder = root_folder + 'fabio.schirru/Data/zanichelli/'
+                print('New test folder: ', root_folder)
 
             try:
 

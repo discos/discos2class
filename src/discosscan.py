@@ -248,6 +248,8 @@ class DiscosScanConverter(object):
             
     # function called by "write_observation(self, scan_cycle, first_subscan_index):"
     def _load_metadata(self, section, polarization, index):
+
+        print("_load_metadata", section, polarization, index)
        
         with fits.open(self.subscans[index][0]) as subscan:
             self.location = (subscan[0].header["SiteLongitude"] * u.rad,
@@ -287,8 +289,18 @@ class DiscosScanConverter(object):
             # To overcome this issue, it is defined a variable "self.section_current_val" which will be updated any time at the end of the function
             # So: during the first loop the variable is declared NULL and nothing happens since the section = 0. At the end of the loop the variable gets the value of the section i.e. 0
             # In the second loop, the section value is still 0 which is the value of the variable. In this case the section value is augmentd by +1 and we can read data for section 1 
-            if(section == self.section_current_val): 
-                section = section + 1
+            
+            
+            # this is valid for SARDARA and SKARAB spectra and stokes types but NOT for stokes with XARCOS
+           
+            # print(subscan["SECTION TABLE"].data[0][1]) # to get the spectra type as "simple", "spectra", "stokes"
+            if not (self.summary['backendname'] == 'XAr'):
+                # section["type"] == "spectra":
+                if(section == self.section_current_val): 
+                    
+                    section = section + 1
+                
+                
 
             for sec in subscan["SECTION TABLE"].data:
                 if sec["id"] == section:
@@ -324,6 +336,8 @@ class DiscosScanConverter(object):
                 self.central_channel = (nchan / 2) + 1
                 self.offsetFrequencyAt0 = 0
 
+            print("from metadata: ", section, polarization, index, self.bandwidth)
+
             # Update section_current_value
             self.section_current_val = section
 
@@ -339,6 +353,8 @@ class DiscosScanConverter(object):
         onoffcal = scan_cycle.onoffcal()
 
         for sec_id, v in scan_cycle.data.items():
+
+            print("v items", v.items())
 
             for pol, data in v.items():
 
@@ -406,7 +422,10 @@ class DiscosScanConverter(object):
                 obs.head.gen.num = 0
                 obs.head.gen.ver = 0
                 # obs.head.gen.teles = self.antenna + " " + "Feed [" + str(self.feeds[sec_id]) + "]" old
-                obs.head.gen.teles = self.antenna + "-" + str(self.receiver) + "-" + self.summary['backendname'] + "-" + self.get_pol_type_string_converted(pol)
+
+
+                obs.head.gen.teles = self.antenna[0:3] + "-" + str(self.receiver) + "-" + self.summary['backendname'] + "-" + self.get_pol_type_string_converted(pol)
+                print(obs.head.gen.teles)
                 obs.head.gen.dobs = int(self.observation_time.mjd) - 60549
                 obs.head.gen.dred = int(self.record_time.mjd) - 60549
                 obs.head.gen.typec = code.coord.equ
@@ -478,6 +497,7 @@ class DiscosScanConverter(object):
                 #obs.head.spe.line = "SEC%d-%s" % (sec_id, pol_converted) # old
                 #obs.head.spe.line = "F%s-%s" % (str(self.feeds[sec_id]), str(self.bandwidth)) + " " + str(sec_id)
                 obs.head.spe.line = "F%s-%s" % (str(self.feeds[sec_id]), str(self.bandwidth))
+                print(obs.head.spe.line)
                 
                 # Check if data are relative to type=spectra 
                 # If so check the number of feeds used: if n > 1 then nodding mode is applied
@@ -552,7 +572,13 @@ class DiscosScanConverter(object):
                     logger.debug("skip calibration")
                     obs.head.gen.tsys = 1. # ANTENNA TEMP TABLE is unknown
                     
+                    print('***Skip Calibration***')
+                    print(on[900:910])
+                    print(off[900:910])
+                    
                     obs.datay = ((on - off) / off )
+
+                    print(obs.datay[900:910])
 
                 # Class needs numbers with some decimal digits
                 # 0. is therefore not allowed and would a blanck histo bar in the graph
