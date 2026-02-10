@@ -34,7 +34,6 @@ import pyclassfiller
 from pyclassfiller import code
 
 from .scancycle import ScanCycle
-from .progress import Progress
 
 #SUMMARY = "summary.fits"
 

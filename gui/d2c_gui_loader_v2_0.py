@@ -16,14 +16,9 @@ from tkinter import filedialog
 
 # VERSION DATE: 09-02-2026
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-# Add the subfolder to sys.path
-sys.path.append(os.path.join(SCRIPT_DIR, 'src'))
-# The previous line allows to call modules without specifying the subfolders where they are located
+from services.duty_cycle import DutyCycle
+from services.file_services import FileServices
 
-from duty_cycle import DutyCycle
-from file_services import FileServices
 
 
 class CheckWorkerThread(QThread):
@@ -279,7 +274,6 @@ class MainUI(QMainWindow):
     MODE_TYPE = ['POSITION SWITCHING', 'NODDING']
     COMBO_MSGs = ['NOT AVAILABLE'] 
 
-
     # path_to_spectral_line_data = ["/roach2_nuraghe/data/", "discos-archive/data"] # index connected to the backend chosen    
 
     def __init__(self):
@@ -304,8 +298,6 @@ class MainUI(QMainWindow):
             self.debug_on = False
 
 
-
-
         # Get the current working directory (the directory where the script is run from)
         # current_directory = os.getcwd()
         # print("Current working directory:", current_directory)
@@ -317,10 +309,6 @@ class MainUI(QMainWindow):
         # Check if the config.ini file exists otherwise initialize it. Retrieve the paths of the mounted drives
         self.path_to_spectral_line_data = self.check_config_exists(self.script_directory, 'config.ini')
         
-
-
-
-
         # Set the fixed size of the window (width, height)
         self.setFixedSize(1212, 747)  # Set the size to 800x600 pixels
 
@@ -453,7 +441,6 @@ class MainUI(QMainWindow):
             with open(full_path_ini, 'w') as configfile:
                 config.write(configfile)
 
-
         return paths
 
 
@@ -530,13 +517,12 @@ class MainUI(QMainWindow):
 
         if(error):
         
-            self.update_console_lv('FILE ERROR - [DUTY CYCLE: ' + str(check_result[1]) + ', FILE: ' + check_result[2] + '.', QColor("red"))
-            self.update_console_lv('Data conversion may provide wrong results!', QColor("red"))
+            self.update_console_lv('DUTY CYCLE ERROR - [NUMBER: ' + str(check_result[1]) + ', FILE: ' + check_result[2] + '.', QColor("red"))
+            self.update_console_lv('WARNING: Data conversion may provide wrong results!', QColor("orange"))
             #self.update_console_lv("", QColor("black"))
             self.enable_check_btn()
             # Get the parameters anyway to start the process
 
-           
         #else:
 
         # After disabling the combo mode restore it to the prevuious value
@@ -853,9 +839,6 @@ class MainUI(QMainWindow):
         # Add the item to the model (which updates the QListView)
        
         self.model.appendRow(init_msg_item)
-
-        
-    
 
         scrollbar = self.console_lv.verticalScrollBar()
         # Scroll to the maximum value (bottom of the list)

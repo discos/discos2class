@@ -1,5 +1,31 @@
 # discos2class
 
+**GUI Mode**
+
+## Requirements 
+
+- Python >=3.10,<3.13 (tested with **3.11.8**)
+- Dependencies listed in `requirements.txt`
+
+## Installation
+
+Create a virtual environment and install dependencies
+
+### Linux / macOS
+python -m venv venv
+source venv/bin/activate
+
+### Windows (Git Bash)
+python -m venv venv
+source venv/Scripts/activate
+
+pip install -r requirements.txt
+
+## Running the software (within /gui folder)
+python -m d2c_gui_loader_v2_0
+
+
+
 **discos2class** command line tool used to 
 convert DISCOS spectroscopy files acquired with XARCOS into CLASS native format.
 
@@ -203,7 +229,7 @@ compute the resulting spectrum as:
 
 ##Requirements
 
-The software is developed in Python, using python2.7, and it depends on  
+The software is developed in Python, using python3.11, and it depends on  
 external python packages:
 
 * astropy
@@ -222,7 +248,7 @@ The command line tool can be installed via:
 $ python setup.py install
 ```
 
-Tested with Python 3.11.8
+Tested with Python 3.11
 
 
 
