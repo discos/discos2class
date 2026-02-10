@@ -1,30 +1,49 @@
-# discos2class
+# discos2class - GUI Mode
 
-**GUI Mode**
+This section describes how to run the graphical user interface (GUI) of the software.
 
-## Requirements 
+---
 
-- Python >=3.10,<3.13 (tested with **3.11.8**)
+## Requirements
+
+- Python **>= 3.10,< 3.13** (tested with **3.11.8**)
 - Dependencies listed in `requirements.txt`
+
+---
 
 ## Installation
 
-Create a virtual environment and install dependencies
+Create a virtual environment and install the required dependencies.
 
 ### Linux / macOS
-python -m venv venv
+
+```bash
+python3 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
+```
 
 ### Windows (Git Bash)
+
+```bash
 python -m venv venv
 source venv/Scripts/activate
-
 pip install -r requirements.txt
+```
 
-## Running the software (within /gui folder)
-python -m d2c_gui_loader_v2_0
+## Running the GUI
+
+From the **root directory of the project**, run:
+
+```bash
+python -m gui.d2c_gui_loader_v2_0
+
+Important: do not run the file directly.
+The GUI must be executed as a Python module using the -m option.
+```
 
 
+# discos2class - Command-Line Mode
 
 **discos2class** command line tool used to 
 convert DISCOS spectroscopy files acquired with XARCOS into CLASS native format.
