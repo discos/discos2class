@@ -42,11 +42,48 @@ Important: do not run the file directly.
 The GUI must be executed as a Python module using the -m option.
 ```
 
+### Configuration file (`config.ini`)
+
+The application relies on the `config.ini` file to define the available data backends.
+This file **must be configured properly** in order for the application to work as expected.
+
+Each backend is defined using three parallel lists:
+
+- `labels`: names shown in the GUI ComboBox
+- `paths`: filesystem paths where the data is stored
+- `ips`: IP addresses of the servers hosting the data
+
+All lists **must have the same number of elements** and be **index-aligned**.
+The same index across the three lists refers to the same backend.
+
+Example:
+
+```ini
+[Drives]
+labels = Backend A, Backend B
+paths  = /mnt/data_a, /mnt/data_b
+ips    = 192.168.1.10, 192.168.1.20
+```
+
+#### Runtime checks
+
+At runtime, the application performs the following checks for the selected backend:
+
+1. Verifies that the selected server (IP) is reachable.
+2. Verifies that the corresponding filesystem path exists and is correctly mounted.
+3. Proceeds with data analysis **only if** the drive is accessible.
+
+An incorrect or inconsistent configuration (for example mismatched list lengths,
+invalid paths, or unreachable servers) may prevent the application from accessing
+the data.
+
+
+
 
 # discos2class - Command-Line Mode
 
 **discos2class** command line tool used to 
-convert DISCOS spectroscopy files acquired with XARCOS into CLASS native format.
+convert DISCOS spectroscopy files acquired with XARCOS, SARDARA and SKARAB into CLASS native format.
 
 ##TOC
 
