@@ -11,6 +11,7 @@ class FileServices():
         pass
        
     
+    
     def get_projects_id(self, root_folder):
 
         projects_id = []
@@ -19,39 +20,37 @@ class FileServices():
         # The relative regular expression (RegEx) is the following:
         r = re.compile("^[0-9]{1,2}-[0-9]{2}$")
 
-        # At first, check if a specific directory or mount point exists
-        print(os.path.exists(root_folder))
+        if('home02' in root_folder):
 
-        if os.path.ismount(root_folder):
-    
-            print(f"Disk {root_folder} is mounted and visible.")
+            root_folder = '/home02/'
 
-            try:
+        if(root_folder=='/home02/'):
+            print('TEST folder')
+            root_folder = root_folder + 'fabio.schirru/Data/zanichelli/'
+            print('New test folder: ', root_folder)
 
-                tmp_subfolders = os.listdir(root_folder)
+        try:
 
-            except:
+            tmp_subfolders = os.listdir(root_folder)
 
-                pass
-          
-            else:
+        except:
 
-                for i in range(len(tmp_subfolders)):
-                    # Check if the file is a an existing directory
-                    if os.path.isdir(root_folder + tmp_subfolders[i]):
-                        # Check if the folder matches the RegEx
-                        if r.match(tmp_subfolders[i]) is not None:
-                        
-                            projects_id.append(tmp_subfolders[i])
+            pass
         
         else:
-            
-            print(f"Disk {root_folder} is not mounted or not visible.")
 
-    
+            for i in range(len(tmp_subfolders)):
+                # Check if the file is a an existing directory
+                if os.path.isdir(root_folder + tmp_subfolders[i]):
+                    # Check if the folder matches the RegEx
+                    if r.match(tmp_subfolders[i]) is not None:
+                    
+                        projects_id.append(tmp_subfolders[i])
+        
         return projects_id
 
 
+    
     def get_folders(self, folder, folder_level):
 
         # Each folder level related to a combo box has its own filtering rules to get the folders
@@ -115,6 +114,7 @@ class FileServices():
                                 folders.append(tmp_subfolders[i])
         
         return folders
+
 
     
     def ping_server(self, remote_ip):

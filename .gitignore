@@ -14,8 +14,10 @@ build
 jandata
 classconverter
 classdata
+discos2class.egg-info/
 src/__init__.py.bak
 src/discosscan.py.bak
+gui/scan_cycle.txt
 *.bak
 dist/
 build/

@@ -1,28 +1,34 @@
+# VERSION DATE: 09-02-2026
+
 import configparser
 import argparse
+import math
 import os
-import time
 import subprocess 
 import sys
+import time
 
 from astropy.io import fits
 from astropy.time import Time
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from tkinter import filedialog
+
+from services.duty_cycle import DutyCycle
+from services.file_services import FileServices
+from services.drive_service import check_drive_status
+
+# Sometimes the 'XDG_RUNTIME_DIR' is not in the system and Qt may complain although the app runs smoothly
+# The following lines of code, in case, creates the variable which Qt is looking for
+if "XDG_RUNTIME_DIR" not in os.environ:
+    runtime_dir = f"/tmp/runtime-{os.getuid()}"
+    os.makedirs(runtime_dir, exist_ok=True)
+    os.chmod(runtime_dir, 0o700)
+    os.environ["XDG_RUNTIME_DIR"] = runtime_dir
+
+from PyQt5.QtGui import QStandardItemModel, QStandardItem, QColor
 from PyQt5.QtWidgets import QMainWindow, QApplication, QProgressBar
 from PyQt5.QtCore import pyqtSignal, QDateTime, QThread, QTimer, QTime
 from PyQt5.uic import loadUi
-from tkinter import filedialog
 
-# VERSION DATE: 18-03-2025
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
-# Add the subfolder to sys.path
-sys.path.append(os.path.join(SCRIPT_DIR, 'src'))
-# The previous line allows to call modules without specifying the subfolders where they are located
-
-from duty_cycle import DutyCycle
-from file_services import FileServices
 
 
 class CheckWorkerThread(QThread):
@@ -33,7 +39,7 @@ class CheckWorkerThread(QThread):
     # Signal to notify the main thread to disable/enable the button in the interface
     update_button_signal = pyqtSignal(bool)
     # Signal to notify the main thread (UI) to update the console (QListView) in the interface 
-    update_console_lv_signal = pyqtSignal(str)
+    update_console_lv_signal = pyqtSignal(str, QColor)
     # Signal to notify the main thread (UI) to update the progressbar range values
     update_check_pb_range = pyqtSignal(QProgressBar, int, int)
     # Signal to notify the main thread (UI) to update the progressbar current value
@@ -65,7 +71,7 @@ class CheckWorkerThread(QThread):
     def run(self):
 
         # Disable the button when the thread starts
-        self.update_console_lv_signal.emit("Duty cycle check started. Please wait...") 
+        self.update_console_lv_signal.emit("Duty cycle check started. Please wait...", QColor("black")) 
 
         folders_to_scan = []
 
@@ -89,7 +95,7 @@ class CheckWorkerThread(QThread):
 
             self.subscans.clear()
 
-            self.update_console_lv_signal.emit("Checking SOURCE FOLDER: " + folders_to_scan[f]) 
+            self.update_console_lv_signal.emit("Checking SOURCE FOLDER: " + folders_to_scan[f], QColor("black")) 
             
             # Get useful information relative to each scan contained in the selected source folder
             for subscan_file in os.listdir(input_scan_directory):
@@ -161,7 +167,8 @@ class CheckWorkerThread(QThread):
                     filename_err = self.subscans[i][0]
 
                     check_result[0] = error
-                    check_result[1] = d
+                    #check_result[1] = d
+                    check_result[1] = math.floor(i/len(self.subscans))
                     check_result[2] = filename_err
 
                     f = len(folders_to_scan)
@@ -252,7 +259,7 @@ class MainUI(QMainWindow):
     # Signal to notify the main thread to disable/enable the button in the interface
     update_button_signal = pyqtSignal(bool)
     # Signal to notify the main thread (UI) to update the console (QListView) in the interface 
-    update_console_lv_signal = pyqtSignal(str)
+    update_console_lv_signal = pyqtSignal(str, QColor)
     # Signal to notify the main thread (UI) to update the progressbar range values
     update_progressbar_range = pyqtSignal(int, int)
     # Signal to notify the main thread (UI) to update the progressbar current value
@@ -267,14 +274,17 @@ class MainUI(QMainWindow):
     progress_timer = False
     scan_cycles = [] # an array containing the number of scan cycles per each folder
     
-    # List definitions  
+    # List definitions
+    # If you want to add a TEST item which points to data in the home02 folder then uncomment the following line
+    # Next, add the home02 full-path of data as third item in the list of paths inside the config.ini file 
     # SERVER_BACKEND = ['SARDARA_BKD', 'SKARAB_BKD', 'TEST']
-    SERVER_BACKEND = ['SARDARA_BKD', 'SKARAB_BKD']
-    SERVER_PING = ['192.168.200.216', '192.168.203.36', '192.168.200.216']
+    #SERVER_BACKEND = ['SARDARA_BKD', 'SKARAB_BKD']
+    #SERVER_PING = ['192.168.200.216', '192.168.203.36', '192.168.200.216']
+    paths = None # paths of the mounted drives where data are located
+    ips = None # ips relative to servers
     DUTY_CYCLE_VALUES = ['0','1','2','3','4','5','6','7','8','9']
     MODE_TYPE = ['POSITION SWITCHING', 'NODDING']
     COMBO_MSGs = ['NOT AVAILABLE'] 
-
 
     # path_to_spectral_line_data = ["/roach2_nuraghe/data/", "discos-archive/data"] # index connected to the backend chosen    
 
@@ -300,8 +310,6 @@ class MainUI(QMainWindow):
             self.debug_on = False
 
 
-
-
         # Get the current working directory (the directory where the script is run from)
         # current_directory = os.getcwd()
         # print("Current working directory:", current_directory)
@@ -311,12 +319,8 @@ class MainUI(QMainWindow):
         print("Script is located at:", self.script_directory)
        
         # Check if the config.ini file exists otherwise initialize it. Retrieve the paths of the mounted drives
-        self.path_to_spectral_line_data = self.check_config_exists(self.script_directory, 'config.ini')
+        self.labels, self.paths, self.ips = self.check_config_exists(self.script_directory, 'config.ini')
         
-
-
-
-
         # Set the fixed size of the window (width, height)
         self.setFixedSize(1212, 747)  # Set the size to 800x600 pixels
 
@@ -350,7 +354,7 @@ class MainUI(QMainWindow):
         self.update_progress_bar_value(self.start_pb, 0)
 
         # Adding combobox drop down list values
-        self.backend_cmb.addItems(self.SERVER_BACKEND)
+        self.backend_cmb.addItems(self.labels)
         self.mode_cmb.addItems(self.MODE_TYPE)
         self.refsig_cmb.addItems(self.DUTY_CYCLE_VALUES)
         self.signal_cmb.addItems(self.DUTY_CYCLE_VALUES)
@@ -364,11 +368,8 @@ class MainUI(QMainWindow):
         self.refsig_cmb.setMaxVisibleItems(5) 
         self.signal_cmb.setMaxVisibleItems(5) 
         self.ref_cmb.setMaxVisibleItems(5) 
-        self.refcal_cmb.setMaxVisibleItems(5) 
-
-        # Load all projects id related to the path_to_spectral_line_data and all relative folders (level 0 and 1)
-        self.update_projects_id(self.path_to_spectral_line_data[self.backend_cmb.currentIndex()])
-
+        self.refcal_cmb.setMaxVisibleItems(5)        
+       
         # Adding actions to comboboxes  
         self.project_id_cmb.activated.connect(self.update_folders_level0)
         self.folder0_cmb.activated.connect(self.update_folders_level1)
@@ -379,13 +380,20 @@ class MainUI(QMainWindow):
         self.refcal_cmb.activated.connect(self.enable_check_btn)
         #self.refsig_cmb_sl.activated.connect(lambda: self.enableCheckBtn(True) if self.getDutyCycleSize() > 0 else self.enableVeryfyBtn())        
         self.folder1_cmb.currentIndexChanged.connect(lambda: self.start_btn.setEnabled(False))
-        self.backend_cmb.currentIndexChanged.connect(lambda: self.check_server(self.SERVER_PING[self.backend_cmb.currentIndex()]))
+        #self.backend_cmb.currentIndexChanged.connect(lambda: self.check_server(self.SERVER_PING[self.backend_cmb.currentIndex()]))
+        self.backend_cmb.currentIndexChanged.connect(self.on_drive_changed) # Qt passes the index automatically 
+
+        self.backend_cmb.currentIndexChanged.connect(self.enable_check_btn) # Qt passes the index automatically 
+        self.folder0_cmb.currentIndexChanged.connect(self.enable_check_btn) # Qt passes the index automatically 
+        self.folder1_cmb.currentIndexChanged.connect(self.enable_check_btn) # Qt passes the index automatically 
+
+
        
         # Buttons actions
         self.check_btn.clicked.connect(self.check_data)
         self.start_btn.clicked.connect(self.convert_data)
         self.dest_btn.clicked.connect(self.get_dest_folder)
-        self.update_btn.clicked.connect(lambda: self.update_projects_id(self.path_to_spectral_line_data[self.backend_cmb.currentIndex()]))
+        self.update_btn.clicked.connect(lambda: self.update_projects_id(self.paths[self.backend_cmb.currentIndex()]))
         # Check Boxes actions
         self.all_folders_cb.clicked.connect(lambda: self.start_btn.setEnabled(False))
 
@@ -412,46 +420,55 @@ class MainUI(QMainWindow):
         # Add the item to the model (which updates the QListView)
         self.model.appendRow(init_date_time_item)
 
+        # Load all projects id related to the path_to_spectral_line_data and all relative folders (level 0 and 1)
+        # self.update_projects_id(self.paths[self.backend_cmb.currentIndex()])
+        self.on_drive_changed(0) 
+
     
+
     def check_config_exists(self, app_path, filename_ini):
 
-        paths = None
-        
-        full_path_ini = app_path + '/' + filename_ini
-        # if config.ini exists then load the mounted drives, otherwise create the config.ini with the list of mounted drives [it should be one drive per backend]
-        
+        full_path_ini = os.path.join(app_path, filename_ini)
+
+        def parse_list(value):
+            return [x.strip() for x in value.split(",")]
+
         if os.path.exists(full_path_ini):
-            
-            print(f"The file '{full_path_ini}' exists. Retrieving mounted drives...")
-            # Read out the mounted drives from the config.ini file
-            # Create a ConfigParser object
+
+            print(f"The file '{full_path_ini}' exists. Retrieving drives...")
+
             config = configparser.ConfigParser()
-            # Read the configuration file
             config.read(full_path_ini)
-            # Get the comma-separated string of paths under the 'Paths' section
-            paths_str = config.get('Paths', 'PATH')
-            # Split the string into a list of paths
-            paths = paths_str.split(',')
-        
+
+            labels = parse_list(config.get('DRIVES', 'labels'))
+            paths  = parse_list(config.get('DRIVES', 'paths'))
+            ips    = parse_list(config.get('DRIVES', 'ips'))
+
+            # sicurezza: liste allineate
+            if len({len(labels), len(paths), len(ips)}) != 1:
+                raise ValueError("config.ini non valido: labels, paths e ips non allineati")
+
         else:
-            
-            paths = ["/roach2_nuraghe/data/", "/discos-archive/data/"] 
 
             print(f"The file '{full_path_ini}' does not exist. Initialization started...")
-            # config.ini initialization
-            # Create a ConfigParser object
+
+            labels = ['SARDARA_BKD', 'SKARAB_BKD']
+            paths  = ["/roach2_nuraghe/data/", "/discos-archive/data/"]
+            ips    = ["192.168.1.10", "192.168.1.20"]
+
             config = configparser.ConfigParser()
-            # Add a section for PATH
-            config.add_section('Paths')
-            # Write the list of paths under the 'Paths' section, as a comma-separated string
-            config.set('Paths', 'PATH', ','.join(paths))
-            # Write the configuration to a file
+            config.add_section('DRIVES')
+
+            config.set('DRIVES', 'labels', ','.join(labels))
+            config.set('DRIVES', 'paths',  ','.join(paths))
+            config.set('DRIVES', 'ips',    ','.join(ips))
+
             with open(full_path_ini, 'w') as configfile:
                 config.write(configfile)
 
-
-        return paths
-
+        # return data
+        return labels, paths, ips
+   
 
 
     def check_data(self):
@@ -501,9 +518,9 @@ class MainUI(QMainWindow):
             duty_cycle_flags.append('REFCAL')
 
         # Create and start the worker thread, passing the parameter (skip_calibration) to it
-        self.thread = CheckWorkerThread(self.check_pb, self.path_to_spectral_line_data[self.backend_cmb.currentIndex()], self.project_id_cmb.currentText(), self.folder0_cmb.currentText(),
+        self.thread = CheckWorkerThread(self.check_pb, self.paths[self.backend_cmb.currentIndex()], self.project_id_cmb.currentText(), self.folder0_cmb.currentText(),
             self.folder1_cmb.currentText(), self.folder1_cmb, self.all_folders_cb.isChecked(), duty_cycle, duty_cycle_flags, duty_cycle_size, mode, True)
-        #self.thread = CheckWorkerThread(self.path_to_spectral_line_data[self.backend_cmb.currentIndex()], self.project_id_cmb.currentText(), self.folder0_cmb.currentText(),
+        #self.thread = CheckWorkerThread(self.paths[self.backend_cmb.currentIndex()], self.project_id_cmb.currentText(), self.folder0_cmb.currentText(),
         #    folders_to_scan[i], duty_cycle, duty_cycle_flags, duty_cycle_size, mode, True)
         
         # Connect the signal from the worker thread to enable/disable the button
@@ -526,28 +543,31 @@ class MainUI(QMainWindow):
 
         if(error):
         
-            self.update_console_lv('FILE ERROR - [DUTY CYCLE: ' + str(check_result[1]) + ', FILE: ' + check_result[2] + '. Please try again.')
-            self.update_console_lv("")
+            self.update_console_lv('DUTY CYCLE ERROR - [NUMBER: ' + str(check_result[1]) + ', FILE: ' + check_result[2] + '.', QColor("red"))
+            self.update_console_lv('WARNING: Data conversion may provide wrong results!', QColor("orange"))
+            #self.update_console_lv("", QColor("black"))
             self.enable_check_btn()
-           
+            # Get the parameters anyway to start the process
+
+        #else:
+
+        # After disabling the combo mode restore it to the prevuious value
+        if(self.mode_cmb.currentText() == self.MODE_TYPE[1]):
+            self.enable_nodding(True)
         else:
+            self.enable_nodding(False)
 
-            # After disabling the combo mode restore it to the prevuious value
-            if(self.mode_cmb.currentText() == self.MODE_TYPE[1]):
-                self.enable_nodding(True)
-            else:
-                self.enable_nodding(False)
+        n_duty_cycles = int(subscans / duty_cycle_size)
+        self.update_console_lv("DUTY CYCLES FOUND [" + str(n_duty_cycles) + "]. Data check completed", QColor("black"))
+        self.update_console_lv("", QColor("black"))
 
-            n_duty_cycles = int(subscans / duty_cycle_size)
-            self.update_console_lv("DUTY CYCLES FOUND [" + str(n_duty_cycles) + "]. Data check successfully completed")
-            self.update_console_lv("")
+        # Enable the process button
+        self.start_btn.setEnabled(True)
 
-            # Enable the process button
-            self.start_btn.setEnabled(True)
-
-            # Set the number of subscan per folder
-            self.n_subscans = subscans
-            self.scan_cycles.append(n_duty_cycles)
+        # Set the number of subscan per folder
+        self.n_subscans = subscans
+        #print('SCAN CYCLE PAR', subscans, duty_cycle_size, n_duty_cycles)
+        self.scan_cycles.append(n_duty_cycles)
 
         # Scroll to the bottom of the list view
         self.scroll_to_bottom()
@@ -560,7 +580,7 @@ class MainUI(QMainWindow):
 
         if(server_up):
 
-            self.update_projects_id(self.path_to_spectral_line_data[self.backend_cmb.currentIndex()])
+            self.update_projects_id(self.paths[self.backend_cmb.currentIndex()])
         
         else:
 
@@ -645,12 +665,12 @@ class MainUI(QMainWindow):
         
         if(self.destination_folder):
             
-            self.update_console_lv('Selected DESTINATION FOLDER: ' + self.destination_folder)
+            self.update_console_lv('Selected DESTINATION FOLDER: ' + self.destination_folder, QColor("black"))
             self.enable_check_btn()
         
         else:
             
-            self.update_console_lv('Selected DESTINATION FOLDER: <Not Specified>')
+            self.update_console_lv('Selected DESTINATION FOLDER: <Not Specified>', QColor("black"))
             self.destination_folder = ""
 
     
@@ -692,12 +712,12 @@ class MainUI(QMainWindow):
             
         if(result): # case of errors
             
-            self.update_console_lv("Data processing ended with errors! Please check your data and try again.") 
+            self.update_console_lv("Data processing ended with errors! Please check your data and try again.", QColor("red")) 
 
         else:
                 
-            self.update_console_lv('Data processing successfully completed! Enjoy GILDAS :-)')
-            self.update_console_lv('')
+            self.update_console_lv('Data processing successfully completed! Enjoy GILDAS :-)', QColor("black"))
+            self.update_console_lv('', QColor("black"))
 
         # Scroll to the bottom of the list view
         self.scroll_to_bottom()
@@ -726,7 +746,7 @@ class MainUI(QMainWindow):
         self.current_index = 0
         # Disable the button when the thread starts
         self.update_widgets_state(False)
-        self.update_console_lv("Data processing started! Please wait...") 
+        self.update_console_lv("Data processing started! Please wait...", QColor("black")) 
 
         # Create the duty cycle string
         duty_cycle = self.get_duty_cycle()
@@ -743,11 +763,11 @@ class MainUI(QMainWindow):
         if self.current_index < len(folders_to_scan):  # Check if we still have tasks to run
 
             # Folder to scan
-            input_scan_directory = (self.path_to_spectral_line_data[self.backend_cmb.currentIndex()] + '/' + self.project_id_cmb.currentText() +  '/' 
+            input_scan_directory = (self.paths[self.backend_cmb.currentIndex()] + '/' + self.project_id_cmb.currentText() +  '/' 
                 + self.folder0_cmb.currentText() + '/' + folders_to_scan[self.current_index])
            
             executable_command = self.d2c_cmd_builder(duty_cycle, self.skip_cal_cb.isChecked(), input_scan_directory, self.destination_folder)
-            self.update_console_lv_signal.emit("COMMAND BEING EXECUTED -> " + executable_command)
+            self.update_console_lv_signal.emit("COMMAND BEING EXECUTED -> " + executable_command, QColor("black"))
 
             # Scroll to the bottom of the list view
             self.scroll_to_bottom()
@@ -775,7 +795,7 @@ class MainUI(QMainWindow):
     def update_folders_level0(self):
         
         # populate the combo boxes containing the sub-folder [level-0]
-        self.folders_level0 = self.file_services.get_folders(self.path_to_spectral_line_data[self.backend_cmb.currentIndex()] + self.project_id_cmb.currentText(), "0-sl")
+        self.folders_level0 = self.file_services.get_folders(self.paths[self.backend_cmb.currentIndex()] + self.project_id_cmb.currentText(), "0-sl")
 
          # if self.folders_level0 is not empty then populate the relative combo box and try to get the folders relative to level 1 
         if(len(self.folders_level0) > 0):
@@ -794,11 +814,12 @@ class MainUI(QMainWindow):
             self.disable_combobox(self.folder0_cmb)
             self.disable_combobox(self.folder1_cmb)
 
+
     
     def update_folders_level1(self):
 
         # populate the combo boxes containing the sub-folder [level-0]
-        self.folders_level1 = self.file_services.get_folders(self.path_to_spectral_line_data[self.backend_cmb.currentIndex()] + self.project_id_cmb.currentText() 
+        self.folders_level1 = self.file_services.get_folders(self.paths[self.backend_cmb.currentIndex()] + self.project_id_cmb.currentText() 
                 + "/" + self.folder0_cmb.currentText(), "1-sl")
 
          # if self.folders_level1 is not empty then populate the relative combobox 
@@ -830,7 +851,7 @@ class MainUI(QMainWindow):
     
       
 
-    def update_console_lv(self, string: str):
+    def update_console_lv(self, string: str, color: QColor):
 
         current_date = QDateTime.currentDateTime().toString("dd-MM-yyyy")
         # Get the current time (you can also adjust the format if you want to include time)
@@ -840,7 +861,10 @@ class MainUI(QMainWindow):
         # Create a QStandardItem with the current date and time
         init_msg = f"[{current_date} - {current_time}]: " + string
         init_msg_item = QStandardItem(init_msg)
+        # Set the foreground color according to the message ('red' for errors, 'black' otherwise)
+        init_msg_item.setForeground(color)
         # Add the item to the model (which updates the QListView)
+       
         self.model.appendRow(init_msg_item)
 
         scrollbar = self.console_lv.verticalScrollBar()
@@ -983,7 +1007,67 @@ class MainUI(QMainWindow):
             except:
                 
                 pass
-           
+
+    
+    
+    def on_drive_changed(self, index):
+        
+        if index < 0:
+            return
+
+        label = self.labels[index]
+        path = self.paths[index]
+        ip   = self.ips[index]
+
+        status = check_drive_status(path, ip)
+
+        # print(status)
+
+        if status["mounted"]:
+
+            self.update_projects_id(self.paths[self.backend_cmb.currentIndex()])
+        
+        else:
+
+            self.disable_combobox(self.folder0_cmb)
+            self.disable_combobox(self.folder1_cmb)
+            self.disable_combobox(self.project_id_cmb)
+            self.disable_widget([self.update_btn], True)
+            self.enable_check_btn()
+        
+        # Update the console
+        self.log_drive_status(status, label)
+
+
+
+    def log_drive_status(self, status, label):
+
+        if status["mounted"]:
+            msg = (
+                f"Data relative to '{label}' available"
+                #"({status['path']})"
+            )
+            color = QColor("green")
+
+        elif status["reachable"]:
+            msg = (
+                f"Server reachable "
+                #"({status['ip']}), "
+                "but Data relative to '{label}' not available"
+            )
+            color = QColor("orange")
+
+        else:
+            msg = (
+                f"Data relative to '{label}' not available "
+                #f"(path: {status['path']}, ip: {status['ip']})"
+            )
+            color = QColor("red")
+
+        self.update_console_lv(msg, color)
+
+
+   
 
         
 if __name__ == "__main__":
