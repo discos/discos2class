@@ -125,7 +125,7 @@ class DiscosScanConverter(object):
         with fits.open(self.subscans[index][0]) as subscan:
             self.location = (subscan[0].header["SiteLongitude"] * u.rad,subscan[0].header["SiteLatitude"] * u.rad)
             self.longitude = self.location[0].to(u.deg) #KR
-            self.latitude = self.location[1].to(u.deg) #KRself.location = (self.location[0].to(u.deg),self.location[1].to(u.deg))
+            self.latitude = self.location[1].to(u.deg) #KR
             self.location = (self.location[0].to(u.deg),self.location[1].to(u.deg))
             self.ra = subscan[0].header["RightAscension"]
             self.dec = subscan[0].header["Declination"]
@@ -298,7 +298,7 @@ class DiscosScanConverter(object):
 
 				
                 v_observer = obs.head.spe.voff - (self.barycorr).to("km / s").value #KR
-				obs.head.spe.doppler = -  (v_observer) / CLIGHT   #KR
+                obs.head.spe. doppler = -  (v_observer) / CLIGHT   #KR   
 				#KR commented the lines below
 				#v_observer = -((self.central_frequency - self.rest_frequency) /
                 #                          self.rest_frequency) * CLIGHT
