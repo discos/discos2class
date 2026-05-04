@@ -297,14 +297,14 @@ class DiscosScanConverter(object):
                     obs.head.spe.vtype = code.velo.unk
                     logger.debug("velocity: UNK")
 
-				
+
                 v_observer = obs.head.spe.voff - (self.barycorr).to("km / s").value #KR
 		obs.head.spe. doppler = -  (v_observer) / CLIGHT   #KR
                 #KR commented the lines below
 		#v_observer = -((self.central_frequency - self.rest_frequency) /
                 #                          self.rest_frequency) * CLIGHT
                 #obs.head.spe.doppler = -  (v_observer + obs.head.spe.voff) / CLIGHT #doppler in units of c light
-                #                        #the negative sign is a class convention. 
+                #                        #the negative sign is a class convention.
                 logger.debug("Doppler  %f" %  obs.head.spe.doppler)
                 obs.head.spe.line = "SEC%d-%s" % (sec_id, pol)
                 on, off, cal = onoffcal[sec_id][pol]
