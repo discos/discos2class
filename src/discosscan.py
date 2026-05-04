@@ -279,7 +279,7 @@ class DiscosScanConverter(object):
                 self.drc = ((self.central_frequency - 1* self.freq_resolution)/(self.rest_frequency))     #KR          
                 self.dr2c = ((self.central_frequency - 1* self.freq_resolution)/(self.rest_frequency))**2 #KR
                 obs.head.spe.voff =  CLIGHT * (1-self.drc) + self.barycorr.to("km / s").value #self.summary["velocity"]["vrad"] #KR - radio convention
-				#obs.head.spe.voff = self.summary["velocity"]["vrad"] KR COMMENTED
+		#obs.head.spe.voff = self.summary["velocity"]["vrad"] KR COMMENTED
                 obs.head.spe.bad = 0.
                 obs.head.spe.image = 0.
                 if self.summary["velocity"]["vframe"] == "BARY":
@@ -298,8 +298,8 @@ class DiscosScanConverter(object):
 
 				
                 v_observer = obs.head.spe.voff - (self.barycorr).to("km / s").value #KR
-				obs.head.spe.line = "SEC%d-%s" % (sec_id, pol) #KR commented the lines below
-				#v_observer = -((self.central_frequency - self.rest_frequency) /
+		obs.head.spe. doppler = -  (v_observer) / CLIGHT   #KR   #KR commented the lines below
+		#v_observer = -((self.central_frequency - self.rest_frequency) /
                 #                          self.rest_frequency) * CLIGHT
                 #obs.head.spe.doppler = -  (v_observer + obs.head.spe.voff) / CLIGHT #doppler in units of c light
                 #                        #the negative sign is a class convention. 
