@@ -298,8 +298,7 @@ class DiscosScanConverter(object):
 
 				
                 v_observer = obs.head.spe.voff - (self.barycorr).to("km / s").value #KR
-                obs.head.spe. doppler = -  (v_observer) / CLIGHT   #KR   
-				#KR commented the lines below
+				obs.head.spe. doppler = -  (v_observer) / CLIGHT   #KR   #KR commented the lines below
 				#v_observer = -((self.central_frequency - self.rest_frequency) /
                 #                          self.rest_frequency) * CLIGHT
                 #obs.head.spe.doppler = -  (v_observer + obs.head.spe.voff) / CLIGHT #doppler in units of c light
