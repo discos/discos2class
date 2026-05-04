@@ -126,7 +126,7 @@ class DiscosScanConverter(object):
             self.location = (subscan[0].header["SiteLongitude"] * u.rad,subscan[0].header["SiteLatitude"] * u.rad)
             self.longitude = self.location[0].to(u.deg) #KR
             self.latitude = self.location[1].to(u.deg) #KR
-			self.location = (self.location[0].to(u.deg),
+	self.location = (self.location[0].to(u.deg),
                              self.location[1].to(u.deg))
             self.ra = subscan[0].header["RightAscension"]
             self.dec = subscan[0].header["Declination"]
