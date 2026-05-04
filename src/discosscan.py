@@ -28,6 +28,7 @@ from astropy.io import fits
 from astropy import units as u
 from astropy.time import Time
 from astropy.constants import c as C
+from astropy.coordinates import ICRS, LSRK, SkyCoord, EarthLocation
 
 import pyclassfiller
 from pyclassfiller import code
@@ -122,8 +123,7 @@ class DiscosScanConverter(object):
             
     def _load_metadata(self, section, polarization, index):
         with fits.open(self.subscans[index][0]) as subscan:
-            self.location = (subscan[0].header["SiteLongitude"] * u.rad,
-                        subscan[0].header["SiteLatitude"] * u.rad)
+            self.location = (subscan[0].header["SiteLongitude"] * u.rad,subscan[0].header["SiteLatitude"] * u.rad)
             self.longitude = self.location[0].to(u.deg) #KR
             self.latitude = self.location[1].to(u.deg) #KR			
 			self.location = (self.location[0].to(u.deg),
@@ -319,11 +319,11 @@ class DiscosScanConverter(object):
                     tsys = counts2kelvin * off_mean
                     obs.head.gen.tsys = tsys
                     logger.debug("tsys: %f" % (tsys,))
-                    obs.datay = ((on - off) / off ) * tsys
+					obs.datay = np.float32(((on - off) / off ) * tsys) #Elia
                 else:
                     logger.debug("skip calibration")
                     obs.head.gen.tsys = 1. # ANTENNA TEMP TABLE is unknown
-                    obs.datay = (on - off) / off
+                    obs.datay =  np.float32((on - off) / off) #Elia
                 obs.write()
                 self.file_class_out.close()
 
