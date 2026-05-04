@@ -319,7 +319,7 @@ class DiscosScanConverter(object):
                     tsys = counts2kelvin * off_mean
                     obs.head.gen.tsys = tsys
                     logger.debug("tsys: %f" % (tsys,))
-					obs.datay = np.float32(((on - off) / off ) * tsys) #Elia
+                    obs.datay = np.float32(((on - off) / off ) * tsys) #Elia
                 else:
                     logger.debug("skip calibration")
                     obs.head.gen.tsys = 1. # ANTENNA TEMP TABLE is unknown
